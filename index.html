@@ -1,0 +1,283 @@
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+/* =====================================================
+   🌅 Morning Walk App — 안정화 버전
+   외부 UI 라이브러리 제거하여 빈 화면 문제 해결
+===================================================== */
+
+const STORAGE_KEY = "morning_walk_records";
+
+/* 간단한 카드 컴포넌트 (라이브러리 의존성 제거) */
+function Card({ children }) {
+  return (
+    <div className="rounded-3xl bg-white/5 border border-white/10 backdrop-blur-md">
+      {children}
+    </div>
+  );
+}
+
+function CardContent({ children }) {
+  return <div className="p-8">{children}</div>;
+}
+
+export default function MorningWalkApp() {
+  const [walkRecords, setWalkRecords] = useState([]);
+
+  /* =========================
+     localStorage 로딩
+  ========================= */
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setWalkRecords(JSON.parse(saved));
+    } catch (e) {
+      console.error("Storage load error", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(walkRecords));
+    } catch (e) {
+      console.error("Storage save error", e);
+    }
+  }, [walkRecords]);
+
+  /* =========================
+     날짜 정렬
+  ========================= */
+  const sortedRecords = useMemo(() => {
+    return [...walkRecords].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
+  }, [walkRecords]);
+
+  /* =========================
+     장소 그룹화
+  ========================= */
+  const groupedByPlace = useMemo(() => {
+    const map = {};
+
+    sortedRecords.forEach((r) => {
+      const key = r.location?.name || "기타 장소";
+      if (!map[key]) map[key] = [];
+      map[key].push(r);
+    });
+
+    return map;
+  }, [sortedRecords]);
+
+  /* =========================
+     통계 계산
+  ========================= */
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7);
+  const currentYear = now.getFullYear().toString();
+
+  const thisMonthRecords = sortedRecords.filter((r) =>
+    r.date.startsWith(currentMonth)
+  );
+
+  const thisYearRecords = sortedRecords.filter((r) =>
+    r.date.startsWith(currentYear)
+  );
+
+  /* 연속 산책 계산 */
+  const uniqueDates = [...new Set(sortedRecords.map((r) => r.date))]
+    .sort()
+    .reverse();
+
+  let streak = 0;
+  if (uniqueDates.length) {
+    let cursor = new Date(uniqueDates[0]);
+
+    for (let d of uniqueDates) {
+      const compare = new Date(d);
+      const diff = (cursor - compare) / (1000 * 60 * 60 * 24);
+
+      if (diff === 0 || diff === 1) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      } else break;
+    }
+  }
+
+  /* 월별 그래프 데이터 */
+  const monthlyMap = {};
+  thisYearRecords.forEach((r) => {
+    const m = r.date.slice(5, 7);
+    monthlyMap[m] = (monthlyMap[m] || 0) + 1;
+  });
+
+  const chartData = Array.from({ length: 12 }).map((_, i) => {
+    const key = String(i + 1).padStart(2, "0");
+    return {
+      month: `${i + 1}월`,
+      count: monthlyMap[key] || 0,
+    };
+  });
+
+  /* 거리 추정 */
+  const estimatedDistance = thisYearRecords.length * 3;
+
+  /* 지도 장소 목록 */
+  const mapPoints = useMemo(() => {
+    const result = [];
+
+    Object.values(groupedByPlace).forEach((records) => {
+      const r = records[0];
+      if (r.location?.lat && r.location?.lng) {
+        result.push(r.location);
+      }
+    });
+
+    return result;
+  }, [groupedByPlace]);
+
+  /* =========================
+     사진 업로드
+  ========================= */
+  const addWalkRecord = (file) => {
+    const today = new Date().toISOString().slice(0, 10);
+
+    const newRecord = {
+      id: Date.now(),
+      date: today,
+      title: "산책 기록",
+      image: URL.createObjectURL(file),
+      location: { name: "위치 미지정" },
+    };
+
+    setWalkRecords((prev) => [newRecord, ...prev]);
+  };
+
+  return (
+    <main className="min-h-screen bg-black text-white p-6 space-y-12">
+      {/* 업로드 */}
+      <section className="max-w-7xl mx-auto">
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) addWalkRecord(file);
+          }}
+          className="mb-6"
+        />
+      </section>
+
+      {/* 통계 */}
+      <section className="max-w-7xl mx-auto space-y-8">
+        <Card>
+          <CardContent>
+            <div className="grid md:grid-cols-4 gap-6 text-center">
+              <div>
+                <p className="text-sm text-gray-400">이번 달 산책</p>
+                <p className="text-3xl font-bold mt-2">
+                  {thisMonthRecords.length}회
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-400">올해 산책</p>
+                <p className="text-3xl font-bold mt-2">
+                  {thisYearRecords.length}회
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-400">연속 산책</p>
+                <p className="text-3xl font-bold mt-2">{streak}일</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-400">총 거리(추정)</p>
+                <p className="text-3xl font-bold mt-2">
+                  {estimatedDistance} km
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <h4 className="text-lg font-semibold mb-4">
+              📈 월별 산책 횟수
+            </h4>
+            <div className="w-full h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <XAxis dataKey="month" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="count"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* 장소 */}
+      <section className="max-w-7xl mx-auto">
+        <Card>
+          <CardContent>
+            <h4 className="text-lg font-semibold mb-4">
+              📍 산책 장소 목록
+            </h4>
+
+            <ul className="mt-4 space-y-1 text-sm">
+              {mapPoints.map((p, idx) => (
+                <li key={idx}>
+                  • {p.name} ({p.lat}, {p.lng})
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* 갤러리 */}
+      <section className="max-w-7xl mx-auto">
+        <h3 className="text-xl font-semibold mb-6">
+          🌅 최신 산책 기록
+        </h3>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {sortedRecords.map((r) => (
+            <Card key={r.id}>
+              <div className="p-4">
+                {r.image && (
+                  <img
+                    src={r.image}
+                    alt={r.title}
+                    className="w-full h-48 object-cover rounded-xl mb-3"
+                  />
+                )}
+                <p className="font-semibold">{r.title}</p>
+                <p className="text-sm text-gray-400">{r.date}</p>
+                <p className="text-sm text-gray-400">
+                  {r.location?.name}
+                </p>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </section>
+    </main>
+  );
+}
