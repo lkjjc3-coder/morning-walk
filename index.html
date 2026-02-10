@@ -6,153 +6,47 @@
   <title>아침 산책 기록</title>
   <link rel="icon" href="data:,">
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, sans-serif;
-      color: white;
-      background: center/cover fixed no-repeat;
-    }
+    body { margin:0; font-family:system-ui,-apple-system,sans-serif; color:white; background:center/cover fixed no-repeat; }
+    body::before { content:""; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:-1; }
 
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: -1;
-    }
+    header { padding:20px; text-align:center; font-size:22px; font-weight:bold; backdrop-filter:blur(6px); background:rgba(0,0,0,0.35); }
 
-    header {
-      padding: 20px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      backdrop-filter: blur(6px);
-      background: rgba(0,0,0,0.35);
-    }
+    nav { display:flex; justify-content:center; gap:16px; padding:10px; backdrop-filter:blur(6px); background:rgba(0,0,0,0.25); flex-wrap:wrap; }
+    nav button { background:rgba(255,255,255,0.15); border:none; color:white; padding:8px 14px; border-radius:20px; cursor:pointer; }
+    nav button:hover { background:rgba(255,255,255,0.3); }
 
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      padding: 10px;
-      backdrop-filter: blur(6px);
-      background: rgba(0,0,0,0.25);
-      flex-wrap: wrap;
-    }
+    .container { max-width:1100px; margin:auto; padding:16px; }
 
-    nav button {
-      background: rgba(255,255,255,0.15);
-      border: none;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 20px;
-      cursor: pointer;
-    }
+    .card { background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:16px; margin-bottom:20px; backdrop-filter:blur(6px); }
 
-    nav button:hover {
-      background: rgba(255,255,255,0.3);
-    }
+    input, textarea { width:100%; margin-bottom:8px; color:white; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:8px; }
 
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 16px;
-    }
+    textarea { resize:vertical; min-height:60px; }
 
-    .card {
-      background: rgba(0,0,0,0.45);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 20px;
-      backdrop-filter: blur(6px);
-    }
+    .helper { font-size:13px; opacity:0.8; margin-bottom:12px; }
+    .status { font-size:14px; margin-top:6px; opacity:0.9; }
 
-    input[type="file"] {
-      margin-bottom: 8px;
-      color: white;
-    }
+    .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+    .gallery img { width:100%; height:200px; object-fit:cover; border-radius:12px; margin-bottom:8px; cursor:pointer; }
 
-    .helper {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-bottom: 12px;
-    }
+    .empty { opacity:0.7; padding:20px; text-align:center; }
 
-    .status {
-      font-size: 14px;
-      margin-top: 6px;
-      opacity: 0.9;
-    }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
+    .stat-box { background:rgba(255,255,255,0.1); padding:14px; border-radius:12px; text-align:center; }
 
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
-    }
+    .month-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:12px; }
+    .month { background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; text-align:center; font-size:14px; }
 
-    .gallery img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      cursor: pointer;
-    }
+    .actions { display:flex; gap:8px; margin-top:8px; }
+    .btn { flex:1; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.15); color:white; cursor:pointer; }
+    .btn:hover { background:rgba(255,255,255,0.3); }
 
-    .empty {
-      opacity: 0.7;
-      padding: 20px;
-      text-align: center;
-    }
+    .memo { font-size:14px; opacity:0.9; margin:6px 0 10px; line-height:1.4; }
 
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-    }
+    .date-group { margin-bottom:30px; }
+    .date-title { margin:18px 0 8px; font-weight:bold; opacity:0.9; }
 
-    .stat-box {
-      background: rgba(255,255,255,0.1);
-      padding: 14px;
-      border-radius: 12px;
-      text-align: center;
-    }
-
-    .month-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .month {
-      background: rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 10px;
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 8px;
-      border-radius: 8px;
-      border: none;
-      background: rgba(255,255,255,0.15);
-      color: white;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      background: rgba(255,255,255,0.3);
-    }
+    .like-btn { margin-top:6px; background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 10px; border-radius:12px; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -163,7 +57,6 @@
   <button onclick="scrollToTop()">홈</button>
   <button onclick="scrollToGallery()">산책 기록</button>
   <button onclick="alert('통계는 위에서 확인하세요.')">통계</button>
-  <button onclick="alert('앞으로 장소별 보기 추가 예정')">장소별</button>
 </nav>
 
 <div class="container">
@@ -171,9 +64,18 @@
   <div class="card">
     <h4>📷 산책 사진 업로드</h4>
     <input type="file" accept="image/*" id="photoInput">
-    <div class="helper">
-      휴대폰 촬영 또는 저장된 사진을 선택할 수 있습니다.
+
+    <textarea id="memoInput" placeholder="오늘 산책 묵상이나 느낌을 한 줄 남겨보세요..."></textarea>
+
+    <div class="helper">사진 + 묵상을 함께 기록할 수 있습니다.</div>
+
+    <div class="actions">
+      <button class="btn" onclick="exportRecords()">기록 내보내기</button>
+      <button class="btn" onclick="importRecords()">기록 가져오기</button>
     </div>
+
+    <input placeholder="🔍 날짜 또는 묵상 검색" id="searchInput">
+
     <div id="uploadStatus" class="status"></div>
 
     <hr style="margin:16px 0;border-color:rgba(255,255,255,0.2)">
@@ -196,286 +98,289 @@
   </div>
 
   <h3 id="galleryTitle">📷 산책 기록</h3>
-  <div id="gallery" class="gallery"></div>
+  <div id="gallery"></div>
 
 </div>
 
 <script>
-const STORAGE_KEY = "morning_walk_records";
-const BG_KEY = "morning_walk_bg";
+const STORAGE_KEY="morning_walk_records";
+const BG_KEY="morning_walk_bg";
 
-let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+let records=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+let searchKeyword="";
 
-function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));}
+
+function applyBackground(){
+  const saved=localStorage.getItem(BG_KEY);
+  document.body.style.backgroundImage = saved
+    ? `url('${saved}')`
+    : "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
 }
 
-function applyBackground() {
-  const saved = localStorage.getItem(BG_KEY);
-
-  if (saved) {
-    document.body.style.backgroundImage = `url('${saved}')`;
-  } else {
-    document.body.style.backgroundImage =
-      "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
-  }
-}
-
-function removeBackground() {
-  if (!confirm("배경을 삭제하고 기본 화면으로 바꿀까요?")) return;
+function removeBackground(){
+  if(!confirm("배경을 기본 화면으로 바꿀까요?"))return;
   localStorage.removeItem(BG_KEY);
   applyBackground();
 }
 
-function today() {
-  return new Date().toISOString().slice(0,10);
-}
+function today(){return new Date().toISOString().slice(0,10);}
+function setStatus(m){document.getElementById("uploadStatus").textContent=m;}
+function scrollToGallery(){document.getElementById("galleryTitle").scrollIntoView({behavior:"smooth"});}
+function scrollToTop(){window.scrollTo({top:0,behavior:"smooth"});}
 
-function setStatus(msg) {
-  document.getElementById("uploadStatus").textContent = msg;
-}
+function renderStats(){
+  const now=new Date();
+  const monthKey=now.toISOString().slice(0,7);
+  const yearKey=now.getFullYear().toString();
 
-function scrollToGallery() {
-  document.getElementById("galleryTitle").scrollIntoView({behavior:"smooth"});
-}
+  const monthCount=records.filter(r=>r.date.startsWith(monthKey)).length;
+  const yearRecords=records.filter(r=>r.date.startsWith(yearKey));
 
-function scrollToTop() {
-  window.scrollTo({top:0,behavior:"smooth"});
-}
+  document.getElementById("monthCount").textContent=monthCount;
+  document.getElementById("yearCount").textContent=yearRecords.length;
+  document.getElementById("distance").textContent=yearRecords.length*3;
 
-function renderStats() {
-  const now = new Date();
-  const monthKey = now.toISOString().slice(0,7);
-  const yearKey = now.getFullYear().toString();
-
-  const monthCount = records.filter(r => r.date.startsWith(monthKey)).length;
-  const yearRecords = records.filter(r => r.date.startsWith(yearKey));
-
-  document.getElementById("monthCount").textContent = monthCount;
-  document.getElementById("yearCount").textContent = yearRecords.length;
-  document.getElementById("distance").textContent = yearRecords.length * 3;
-
-  const uniqueDates = [...new Set(records.map(r => r.date))].sort().reverse();
-
-  let streak = 0;
-  if (uniqueDates.length) {
-    let cursor = new Date(uniqueDates[0]);
-
-    for (let d of uniqueDates) {
-      const compare = new Date(d);
-      const diff = (cursor - compare) / 86400000;
-
-      if (diff === 0 || diff === 1) {
-        streak++;
-        cursor.setDate(cursor.getDate() - 1);
-      } else break;
+  const uniqueDates=[...new Set(records.map(r=>r.date))].sort().reverse();
+  let streak=0;
+  if(uniqueDates.length){
+    let cursor=new Date(uniqueDates[0]);
+    for(let d of uniqueDates){
+      const compare=new Date(d);
+      const diff=(cursor-compare)/86400000;
+      if(diff===0||diff===1){streak++;cursor.setDate(cursor.getDate()-1);} else break;
     }
   }
+  document.getElementById("streak").textContent=streak;
 
-  document.getElementById("streak").textContent = streak;
-
-  const monthly = {};
-  yearRecords.forEach(r => {
-    const m = r.date.slice(5,7);
-    monthly[m] = (monthly[m] || 0) + 1;
+  const monthly={};
+  yearRecords.forEach(r=>{
+    const m=r.date.slice(5,7);
+    monthly[m]=(monthly[m]||0)+1;
   });
 
-  const grid = document.getElementById("monthGrid");
-  grid.innerHTML = "";
-
-  for (let i=1;i<=12;i++){
-    const key = String(i).padStart(2,"0");
-    const div = document.createElement("div");
-    div.className = "month";
-    div.innerHTML = `${i}월<br><b>${monthly[key]||0}</b>`;
+  const grid=document.getElementById("monthGrid");
+  grid.innerHTML="";
+  for(let i=1;i<=12;i++){
+    const key=String(i).padStart(2,"0");
+    const div=document.createElement("div");
+    div.className="month";
+    div.innerHTML=`${i}월<br><b>${monthly[key]||0}</b>`;
     grid.appendChild(div);
   }
 }
 
-function deleteRecord(id) {
-  if (!confirm("삭제할까요?")) return;
-  records = records.filter(r => r.id !== id);
-  save();
-  renderAll();
+function deleteRecord(id){
+  if(!confirm("삭제할까요?"))return;
+  records=records.filter(r=>r.id!==id);
+  save(); renderAll();
 }
 
-function replaceImage(id) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = "image/*";
-
-  input.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const target = records.find(r => r.id === id);
-      if (target) {
-        target.image = reader.result;
-        save();
-        renderAll();
-      }
-    };
-
-    reader.readAsDataURL(file);
+function replaceImage(id){
+  const input=document.createElement("input");
+  input.type="file"; input.accept="image/*";
+  input.onchange=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    compressImage(file,data=>{
+      const target=records.find(r=>r.id===id);
+      if(target){target.image=data; save(); renderAll();}
+    });
   };
-
   input.click();
 }
 
-function renderGallery() {
-  const container = document.getElementById("gallery");
-  container.innerHTML = "";
+function likeRecord(id){
+  const r=records.find(x=>x.id===id);
+  if(!r)return;
+  r.likes=(r.likes||0)+1;
+  save(); renderAll();
+}
 
-  if (!records.length) {
-    container.innerHTML = '<div class="empty">아직 업로드된 산책 기록이 없습니다.<br>위에서 사진을 추가해 보세요.</div>';
+function renderGallery(){
+  const container=document.getElementById("gallery");
+  container.innerHTML="";
+
+  let filtered=records.filter(r=>{
+    const text=(r.memo||"").toLowerCase();
+    return r.date.includes(searchKeyword)||text.includes(searchKeyword);
+  });
+
+  if(!filtered.length){
+    container.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';
     return;
   }
 
-  records.sort((a,b)=>b.date.localeCompare(a.date));
+  filtered.sort((a,b)=>b.date.localeCompare(a.date));
 
-  records.forEach(r => {
-    const card = document.createElement("div");
-    card.className = "card";
+  const groups={};
+  filtered.forEach(r=>{
+    groups[r.date]=groups[r.date]||[];
+    groups[r.date].push(r);
+  });
 
-    const img = document.createElement("img");
-    img.src = r.image;
-    img.onclick = () => openViewer(r.image);
+  Object.keys(groups).sort().reverse().forEach(date=>{
+    const groupDiv=document.createElement("div");
+    groupDiv.className="date-group";
 
-    const title = document.createElement("div");
-    title.textContent = r.date;
+    const title=document.createElement("div");
+    title.className="date-title";
+    title.textContent=date;
+    groupDiv.appendChild(title);
 
-    const actions = document.createElement("div");
-    actions.className = "actions";
+    const grid=document.createElement("div");
+    grid.className="gallery";
 
-    const editBtn = document.createElement("button");
-    editBtn.className = "btn";
-    editBtn.textContent = "사진 수정";
-    editBtn.onclick = () => replaceImage(r.id);
+    groups[date].forEach(r=>{
+      const card=document.createElement("div");
+      card.className="card";
 
-    const delBtn = document.createElement("button");
-    delBtn.className = "btn";
-    delBtn.textContent = "삭제";
-    delBtn.onclick = () => deleteRecord(r.id);
+      const img=document.createElement("img");
+      img.src=r.image;
+      img.onclick=()=>openViewer(r.image);
 
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
+      const memo=document.createElement("div");
+      memo.className="memo";
+      memo.textContent=r.memo||"";
 
-    card.appendChild(img);
-    card.appendChild(title);
-    card.appendChild(actions);
-    container.appendChild(card);
+      const likeBtn=document.createElement("button");
+      likeBtn.className="like-btn";
+      likeBtn.textContent=`🙏 은혜 받았습니다 (${r.likes||0})`;
+      likeBtn.onclick=()=>likeRecord(r.id);
+
+      const actions=document.createElement("div");
+      actions.className="actions";
+
+      const editBtn=document.createElement("button");
+      editBtn.className="btn";
+      editBtn.textContent="사진 수정";
+      editBtn.onclick=()=>replaceImage(r.id);
+
+      const delBtn=document.createElement("button");
+      delBtn.className="btn";
+      delBtn.textContent="삭제";
+      delBtn.onclick=()=>deleteRecord(r.id);
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      card.appendChild(img);
+      card.appendChild(memo);
+      card.appendChild(likeBtn);
+      card.appendChild(actions);
+      grid.appendChild(card);
+    });
+
+    groupDiv.appendChild(grid);
+    container.appendChild(groupDiv);
   });
 }
 
-function renderAll(){
-  renderStats();
-  renderGallery();
-  setStatus(`현재 기록 ${records.length}개`);
-}
+function renderAll(){renderStats();renderGallery(); setStatus(`현재 기록 ${records.length}개`);} 
 
-const input = document.getElementById("photoInput");
-
-// 큰 사진을 데스크탑에서도 저장 가능하도록 용량을 줄여 저장
-function compressImage(file, callback) {
-  const reader = new FileReader();
-
-  reader.onload = e => {
-    const img = new Image();
-
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-
-      // 가로/세로 어느 쪽이든 큰 쪽을 기준으로 축소
-      const MAX_SIZE = 1600;
-      const scale = Math.min(
-        1,
-        MAX_SIZE / Math.max(img.width, img.height)
-      );
-
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-      callback(dataUrl);
+function compressImage(file,callback){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement("canvas");
+      const ctx=canvas.getContext("2d");
+      const MAX=1600;
+      const scale=Math.min(1,MAX/Math.max(img.width,img.height));
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      ctx.drawImage(img,0,0,canvas.width,canvas.height);
+      callback(canvas.toDataURL("image/jpeg",0.82));
     };
-
-    img.onerror = () => {
-      setStatus("지원되지 않는 이미지 형식입니다.");
-    };
-
-    img.src = e.target.result;
+    img.src=e.target.result;
   };
-
   reader.readAsDataURL(file);
 }
 
-input.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
+// 업로드
+photoInput.addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file)return;
   setStatus("사진 저장 중...");
 
-  compressImage(file, (imageData) => {
-    try {
-      records.push({
-        id: Date.now(),
-        date: today(),
-        image: imageData
-      });
+  compressImage(file,data=>{
+    records.push({
+      id:Date.now(),
+      date:today(),
+      image:data,
+      memo:document.getElementById("memoInput").value,
+      likes:0
+    });
 
-      save();
-      renderAll();
-      setStatus("사진 저장 완료 ✅");
-
-      e.target.value = "";
-      setTimeout(scrollToGallery, 300);
-    } catch (err) {
-      setStatus("저장 공간이 부족합니다. 일부 사진을 삭제해 주세요.");
-    }
+    document.getElementById("memoInput").value="";
+    save(); renderAll();
+    setStatus("사진 저장 완료 ✅");
+    e.target.value="";
+    setTimeout(scrollToGallery,300);
   });
+});
+
+// 검색
+searchInput.addEventListener("input",e=>{
+  searchKeyword=e.target.value.toLowerCase();
+  renderGallery();
 });
 
 // 배경 업로드
-const bgInput = document.getElementById("bgInput");
-
-bgInput.addEventListener("change", e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    localStorage.setItem(BG_KEY, reader.result);
+bgInput.addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    localStorage.setItem(BG_KEY,reader.result);
     applyBackground();
-    e.target.value = "";
   };
-
   reader.readAsDataURL(file);
 });
+
+// 공유
+function exportRecords(){
+  if(!records.length)return alert("내보낼 기록이 없습니다.");
+  const blob=new Blob([JSON.stringify(records)],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="morning-walk-records.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importRecords(){
+  const input=document.createElement("input");
+  input.type="file"; input.accept="application/json";
+  input.onchange=e=>{
+    const file=e.target.files[0]; if(!file)return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const incoming=JSON.parse(reader.result);
+        records=incoming.concat(records);
+        save(); renderAll();
+        alert("기록 가져오기 완료");
+      }catch{alert("올바른 파일이 아닙니다.");}
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
 
 applyBackground();
 renderAll();
 </script>
 
-<!-- 이미지 크게 보기 -->
 <div id="viewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;">
   <img id="viewerImg" style="max-width:95%;max-height:95%;border-radius:12px;" />
 </div>
 
 <script>
 function openViewer(src){
-  const viewer = document.getElementById("viewer");
-  const img = document.getElementById("viewerImg");
-  img.src = src;
-  viewer.style.display = "flex";
+  const viewer=document.getElementById("viewer");
+  const img=document.getElementById("viewerImg");
+  img.src=src; viewer.style.display="flex";
 }
 
-document.getElementById("viewer").onclick = () => {
-  document.getElementById("viewer").style.display = "none";
+document.getElementById("viewer").onclick=()=>{
+  document.getElementById("viewer").style.display="none";
 };
 </script>
 
