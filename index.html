@@ -140,21 +140,32 @@ function initSection(key, title) {
   });
 
   saveBtn.addEventListener('click', () => {
-    alert('저장 버튼이 눌렸습니다');
+    console.log('저장 클릭됨');
 
     if (!tempImage && !textarea.value.trim()) {
       alert('사진이나 글 중 하나는 입력해주세요');
       return;
     }
 
-    data.unshift({
+    const newItem = {
       img: tempImage,
       text: textarea.value.trim(),
       likes: 0,
       date: new Date().toISOString()
-    });
+    };
 
-    localStorage.setItem(key, JSON.stringify(data));
+    data.unshift(newItem);
+
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      console.error('저장 실패:', e);
+      alert('저장 공간이 부족하거나 브라우저가 저장을 차단했습니다.
+사진 용량을 줄이거나 다른 브라우저를 사용해 주세요.');
+      return;
+    }
+
+    console.log('저장 완료, 현재 개수:', data.length);
 
     tempImage = null;
     preview.src = '';
@@ -165,6 +176,7 @@ function initSection(key, title) {
     render();
 
     viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   });
 
   function render() {
