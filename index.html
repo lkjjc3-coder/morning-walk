@@ -1,435 +1,195 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>아침 산책 기록</title>
-  <link rel="icon" href="data:,">
-  <style>
-    body { margin:0; font-family:system-ui,-apple-system,sans-serif; color:white; background:center/cover fixed no-repeat; }
-    body::before { content:""; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:-1; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아침 산책 기록</title>
+<style>
+body {
+  font-family: sans-serif;
+  text-align: center;
+  background-size: cover;
+  background-position: center;
+  background-color: #111;
+  color: white;
+  margin: 0;
+  padding: 20px;
+}
 
-    header { padding:20px; text-align:center; font-size:22px; font-weight:bold; backdrop-filter:blur(6px); background:rgba(0,0,0,0.35); }
+h1 { margin-bottom: 20px; }
 
-    nav { display:flex; justify-content:center; gap:16px; padding:10px; backdrop-filter:blur(6px); background:rgba(0,0,0,0.25); flex-wrap:wrap; }
-    nav button { background:rgba(255,255,255,0.15); border:none; color:white; padding:8px 14px; border-radius:20px; cursor:pointer; }
-    nav button:hover { background:rgba(255,255,255,0.3); }
+#gallery {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 
-    .container { max-width:1100px; margin:auto; padding:16px; }
+.card {
+  margin: 10px;
+  background: rgba(0,0,0,0.4);
+  padding: 10px;
+  border-radius: 12px;
+  width: 220px;
+}
 
-    .card { background:rgba(0,0,0,0.45); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:16px; margin-bottom:20px; backdrop-filter:blur(6px); }
+.photo {
+  width: 200px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: block;
+}
 
-    input, textarea { width:100%; margin-bottom:8px; color:white; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; padding:8px; }
+.actions button {
+  margin-top: 5px;
+  cursor: pointer;
+}
 
-    textarea { resize:vertical; min-height:60px; }
+.comment-input {
+  width: 90%;
+  margin-top: 6px;
+}
 
-    .helper { font-size:13px; opacity:0.8; margin-bottom:12px; }
-    .status { font-size:14px; margin-top:6px; opacity:0.9; }
+.comment-list {
+  font-size: 13px;
+  text-align: left;
+  margin-top: 6px;
+  max-height: 80px;
+  overflow-y: auto;
+}
 
-    .gallery { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
-    .gallery img { width:100%; height:200px; object-fit:cover; border-radius:12px; margin-bottom:8px; cursor:pointer; }
+.comment-item {
+  opacity: 0.9;
+}
 
-    .empty { opacity:0.7; padding:20px; text-align:center; }
-
-    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; }
-    .stat-box { background:rgba(255,255,255,0.1); padding:14px; border-radius:12px; text-align:center; }
-
-    .month-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:8px; margin-top:12px; }
-    .month { background:rgba(255,255,255,0.1); padding:10px; border-radius:10px; text-align:center; font-size:14px; }
-
-    .actions { display:flex; gap:8px; margin-top:8px; }
-    .btn { flex:1; padding:8px; border-radius:8px; border:none; background:rgba(255,255,255,0.15); color:white; cursor:pointer; }
-    .btn:hover { background:rgba(255,255,255,0.3); }
-
-    .memo { font-size:14px; opacity:0.9; margin:6px 0 10px; line-height:1.4; }
-
-    .date-group { margin-bottom:30px; }
-    .date-title { margin:18px 0 8px; font-weight:bold; opacity:0.9; }
-
-    .like-btn { margin-top:6px; background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 10px; border-radius:12px; cursor:pointer; }
-
-    .comments { margin-top:8px; }
-    .comment { font-size:13px; opacity:0.9; margin:2px 0; }
-    .comment-input { display:flex; gap:6px; margin-top:6px; }
-    .comment-input input { flex:1; margin:0; }
-    .comment-input button { padding:6px 10px; border-radius:8px; border:none; background:rgba(255,255,255,0.15); color:white; cursor:pointer; }
-  </style>
+input[type="file"] {
+  margin-bottom: 20px;
+}
+</style>
 </head>
 <body>
 
-<header>🌅 아침 산책 기록</header>
+<h1>아침 산책 기록</h1>
 
-<nav>
-  <button onclick="scrollToTop()">홈</button>
-  <button onclick="scrollToGallery()">산책 기록</button>
-  <button onclick="alert('통계는 위에서 확인하세요.')">통계</button>
-</nav>
+<input type="file" id="photoInput" accept="image/*">
 
-<div class="container">
-
-  <div class="card">
-    <h4>📷 산책 사진 업로드</h4>
-    <input type="file" accept="image/*" id="photoInput">
-
-    <textarea id="memoInput" placeholder="오늘 산책 묵상이나 느낌을 한 줄 남겨보세요..."></textarea>
-
-    <div class="helper">사진 + 묵상을 함께 기록할 수 있습니다.</div>
-
-    <div class="actions">
-      <button class="btn" onclick="exportRecords()">기록 내보내기</button>
-      <button class="btn" onclick="importRecords()">기록 가져오기</button>
-    </div>
-
-    <input placeholder="🔍 날짜 또는 묵상 검색" id="searchInput">
-
-    <div id="uploadStatus" class="status"></div>
-
-    <hr style="margin:16px 0;border-color:rgba(255,255,255,0.2)">
-
-    <h4>🖼 배경 화면 설정</h4>
-    <input type="file" accept="image/*" id="bgInput">
-    <div class="actions">
-      <button class="btn" onclick="removeBackground()">배경 삭제</button>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-box">이번 달<br><b id="monthCount">0</b>회</div>
-      <div class="stat-box">올해 기록<br><b id="yearCount">0</b>회</div>
-      <div class="stat-box">연속 산책<br><b id="streak">0</b>일</div>
-      <div class="stat-box">추정 거리<br><b id="distance">0</b>km</div>
-    </div>
-
-    <h4 style="margin-top:18px">📈 월별 기록</h4>
-    <div id="monthGrid" class="month-grid"></div>
-  </div>
-
-  <h3 id="galleryTitle">📷 산책 기록</h3>
-  <div id="gallery"></div>
-
-</div>
+<div id="gallery"></div>
 
 <script>
-const STORAGE_KEY="morning_walk_records";
-const BG_KEY="morning_walk_bg";
+const fileInput = document.getElementById("photoInput");
+const gallery = document.getElementById("gallery");
 
-let records=JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
-let searchKeyword="";
+let records = JSON.parse(localStorage.getItem("records") || "[]");
 
-function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));}
+/* ================= 업로드 ================= */
+fileInput.addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
 
-function applyBackground(){
-  const saved=localStorage.getItem(BG_KEY);
-  const url = saved
-    ? `url('${saved}')`
-    : "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    const record = {
+      src: e.target.result,
+      likes: 0,
+      comments: []
+    };
 
-  // 배경 전체 속성을 다시 설정하여 일부 브라우저에서 이미지가 안 바뀌는 문제 해결
-  document.body.style.background = `${url} center / cover fixed no-repeat`;
-}')`
-    : "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
+    records.unshift(record);
+    saveRecords();
+    renderAll();
+  };
+  reader.readAsDataURL(file);
+
+  // 같은 파일 다시 선택 가능하게 초기화
+  this.value = "";
+});
+
+/* ================= 저장 ================= */
+function saveRecords() {
+  localStorage.setItem("records", JSON.stringify(records));
 }
 
-function removeBackground(){
-  if(!confirm("배경을 기본 화면으로 바꿀까요?"))return;
-  localStorage.removeItem(BG_KEY);
-  applyBackground();
+/* ================= 화면 그리기 ================= */
+function renderAll() {
+  gallery.innerHTML = "";
+  records.forEach((rec, index) => addPhoto(rec, index));
 }
 
-function today(){return new Date().toISOString().slice(0,10);} 
-function setStatus(m){document.getElementById("uploadStatus").textContent=m;}
-function scrollToGallery(){document.getElementById("galleryTitle").scrollIntoView({behavior:"smooth"});}
-function scrollToTop(){window.scrollTo({top:0,behavior:"smooth"});}
+function addPhoto(rec, index) {
+  const card = document.createElement("div");
+  card.className = "card";
 
-function renderStats(){
-  const now=new Date();
-  const monthKey=now.toISOString().slice(0,7);
-  const yearKey=now.getFullYear().toString();
+  const img = document.createElement("img");
+  img.src = rec.src;
+  img.className = "photo";
 
-  const monthCount=records.filter(r=>r.date.startsWith(monthKey)).length;
-  const yearRecords=records.filter(r=>r.date.startsWith(yearKey));
+  // 사진 클릭 시 배경 적용
+  img.onclick = () => setBackground(rec.src);
 
-  document.getElementById("monthCount").textContent=monthCount;
-  document.getElementById("yearCount").textContent=yearRecords.length;
-  document.getElementById("distance").textContent=yearRecords.length*3;
+  /* ===== 좋아요 ===== */
+  const likeBtn = document.createElement("button");
+  likeBtn.textContent = `👍 좋아요 ${rec.likes}`;
+  likeBtn.onclick = () => {
+    rec.likes++;
+    saveRecords();
+    renderAll();
+  };
 
-  const uniqueDates=[...new Set(records.map(r=>r.date))].sort().reverse();
-  let streak=0;
-  if(uniqueDates.length){
-    let cursor=new Date(uniqueDates[0]);
-    for(let d of uniqueDates){
-      const compare=new Date(d);
-      const diff=(cursor-compare)/86400000;
-      if(diff===0||diff===1){streak++;cursor.setDate(cursor.getDate()-1);} else break;
+  /* ===== 삭제 ===== */
+  const delBtn = document.createElement("button");
+  delBtn.textContent = "🗑 삭제";
+  delBtn.onclick = () => {
+    if (!confirm("이 사진을 삭제할까요?")) return;
+    records.splice(index, 1);
+    saveRecords();
+    renderAll();
+  };
+
+  const actions = document.createElement("div");
+  actions.className = "actions";
+  actions.append(likeBtn, delBtn);
+
+  /* ===== 댓글 ===== */
+  const commentInput = document.createElement("input");
+  commentInput.placeholder = "짧은 댓글 남기기";
+  commentInput.className = "comment-input";
+
+  commentInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && commentInput.value.trim()) {
+      rec.comments.push(commentInput.value.trim());
+      commentInput.value = "";
+      saveRecords();
+      renderAll();
     }
-  }
-  document.getElementById("streak").textContent=streak;
-
-  const monthly={};
-  yearRecords.forEach(r=>{
-    const m=r.date.slice(5,7);
-    monthly[m]=(monthly[m]||0)+1;
   });
 
-  const grid=document.getElementById("monthGrid");
-  grid.innerHTML="";
-  for(let i=1;i<=12;i++){
-    const key=String(i).padStart(2,"0");
-    const div=document.createElement("div");
-    div.className="month";
-    div.innerHTML=`${i}월<br><b>${monthly[key]||0}</b>`;
-    grid.appendChild(div);
-  }
-}
+  const commentList = document.createElement("div");
+  commentList.className = "comment-list";
 
-function deleteRecord(id){
-  if(!confirm("삭제할까요?"))return;
-  records=records.filter(r=>r.id!==id);
-  save(); renderAll();
-}
-
-function replaceImage(id){
-  const input=document.createElement("input");
-  input.type="file"; input.accept="image/*";
-  input.onchange=e=>{
-    const file=e.target.files[0]; if(!file)return;
-    compressImage(file,data=>{
-      const target=records.find(r=>r.id===id);
-      if(target){target.image=data; save(); renderAll();}
-    });
-  };
-  input.click();
-}
-
-function likeRecord(id){
-  const r=records.find(x=>x.id===id);
-  if(!r)return;
-  r.likes=(r.likes||0)+1;
-  save(); renderAll();
-}
-
-function addComment(id, inputEl){
-  const text=inputEl.value.trim();
-  if(!text) return;
-  if(text.length>60){alert("댓글은 60자 이내로 입력해주세요.");return;}
-
-  const r=records.find(x=>x.id===id);
-  if(!r)return;
-
-  r.comments=r.comments||[];
-  r.comments.push(text);
-
-  inputEl.value="";
-  save(); renderAll();
-}
-
-function renderGallery(){
-  const container=document.getElementById("gallery");
-  container.innerHTML="";
-
-  let filtered=records.filter(r=>{
-    const text=(r.memo||"").toLowerCase();
-    return r.date.includes(searchKeyword)||text.includes(searchKeyword);
+  rec.comments.slice(-3).forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment-item";
+    div.textContent = "💬 " + c;
+    commentList.append(div);
   });
 
-  if(!filtered.length){
-    container.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';
-    return;
-  }
-
-  filtered.sort((a,b)=>b.date.localeCompare(a.date));
-
-  const groups={};
-  filtered.forEach(r=>{
-    groups[r.date]=groups[r.date]||[];
-    groups[r.date].push(r);
-  });
-
-  Object.keys(groups).sort().reverse().forEach(date=>{
-    const groupDiv=document.createElement("div");
-    groupDiv.className="date-group";
-
-    const title=document.createElement("div");
-    title.className="date-title";
-    title.textContent=date;
-    groupDiv.appendChild(title);
-
-    const grid=document.createElement("div");
-    grid.className="gallery";
-
-    groups[date].forEach(r=>{
-      const card=document.createElement("div");
-      card.className="card";
-
-      const img=document.createElement("img");
-      img.src=r.image;
-      img.onclick=()=>openViewer(r.image);
-
-      const memo=document.createElement("div");
-      memo.className="memo";
-      memo.textContent=r.memo||"";
-
-      const likeBtn=document.createElement("button");
-      likeBtn.className="like-btn";
-      likeBtn.textContent=`👍 좋아요 (${r.likes||0})`;
-      likeBtn.onclick=()=>likeRecord(r.id);
-
-      const commentsWrap=document.createElement("div");
-      commentsWrap.className="comments";
-
-      (r.comments||[]).forEach(c=>{
-        const div=document.createElement("div");
-        div.className="comment";
-        div.textContent="💬 " + c;
-        commentsWrap.appendChild(div);
-      });
-
-      const commentInputWrap=document.createElement("div");
-      commentInputWrap.className="comment-input";
-
-      const commentInput=document.createElement("input");
-      commentInput.placeholder="짧은 댓글 남기기";
-
-      const commentBtn=document.createElement("button");
-      commentBtn.textContent="등록";
-      commentBtn.onclick=()=>addComment(r.id, commentInput);
-
-      commentInputWrap.appendChild(commentInput);
-      commentInputWrap.appendChild(commentBtn);
-
-      const actions=document.createElement("div");
-      actions.className="actions";
-
-      const editBtn=document.createElement("button");
-      editBtn.className="btn";
-      editBtn.textContent="사진 수정";
-      editBtn.onclick=()=>replaceImage(r.id);
-
-      const delBtn=document.createElement("button");
-      delBtn.className="btn";
-      delBtn.textContent="삭제";
-      delBtn.onclick=()=>deleteRecord(r.id);
-
-      actions.appendChild(editBtn);
-      actions.appendChild(delBtn);
-
-      card.appendChild(img);
-      card.appendChild(memo);
-      card.appendChild(likeBtn);
-      card.appendChild(commentsWrap);
-      card.appendChild(commentInputWrap);
-      card.appendChild(actions);
-      grid.appendChild(card);
-    });
-
-    groupDiv.appendChild(grid);
-    container.appendChild(groupDiv);
-  });
+  card.append(img, actions, commentInput, commentList);
+  gallery.append(card);
 }
 
-function renderAll(){renderStats();renderGallery(); setStatus(`현재 기록 ${records.length}개`);} 
-
-function compressImage(file,callback){
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=new Image();
-    img.onload=()=>{
-      const canvas=document.createElement("canvas");
-      const ctx=canvas.getContext("2d");
-      const MAX=1600;
-      const scale=Math.min(1,MAX/Math.max(img.width,img.height));
-      canvas.width=img.width*scale;
-      canvas.height=img.height*scale;
-      ctx.drawImage(img,0,0,canvas.width,canvas.height);
-      callback(canvas.toDataURL("image/jpeg",0.82));
-    };
-    img.src=e.target.result;
-  };
-  reader.readAsDataURL(file);
+/* ================= 배경 설정 ================= */
+function setBackground(src) {
+  document.body.style.backgroundImage = `url(${src})`;
+  localStorage.setItem("bgImage", src);
 }
 
-photoInput.addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file)return;
-  setStatus("사진 저장 중...");
-
-  compressImage(file,data=>{
-    records.push({
-      id:Date.now(),
-      date:today(),
-      image:data,
-      memo:document.getElementById("memoInput").value,
-      likes:0,
-      comments:[]
-    });
-
-    document.getElementById("memoInput").value="";
-    save(); renderAll();
-    setStatus("사진 저장 완료 ✅");
-    e.target.value="";
-    setTimeout(scrollToGallery,300);
-  });
-});
-
-searchInput.addEventListener("input",e=>{
-  searchKeyword=e.target.value.toLowerCase();
-  renderGallery();
-});
-
-bgInput.addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    localStorage.setItem(BG_KEY,reader.result);
-    applyBackground();
-  };
-  reader.readAsDataURL(file);
-});
-
-function exportRecords(){
-  if(!records.length)return alert("내보낼 기록이 없습니다.");
-  const blob=new Blob([JSON.stringify(records)],{type:"application/json"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download="morning-walk-records.json"; a.click();
-  URL.revokeObjectURL(url);
+function loadBackground() {
+  const bg = localStorage.getItem("bgImage");
+  if (bg) document.body.style.backgroundImage = `url(${bg})`;
 }
 
-function importRecords(){
-  const input=document.createElement("input");
-  input.type="file"; input.accept="application/json";
-  input.onchange=e=>{
-    const file=e.target.files[0]; if(!file)return;
-    const reader=new FileReader();
-    reader.onload=()=>{
-      try{
-        const incoming=JSON.parse(reader.result);
-        records=incoming.concat(records);
-        save(); renderAll();
-        alert("기록 가져오기 완료");
-      }catch{alert("올바른 파일이 아닙니다.");}
-    };
-    reader.readAsText(file);
-  };
-  input.click();
-}
-
-applyBackground();
+/* ================= 초기 실행 ================= */
 renderAll();
-</script>
-
-<div id="viewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;">
-  <img id="viewerImg" style="max-width:95%;max-height:95%;border-radius:12px;" />
-</div>
-
-<script>
-function openViewer(src){
-  const viewer=document.getElementById("viewer");
-  const img=document.getElementById("viewerImg");
-  img.src=src; viewer.style.display="flex";
-}
-
-document.getElementById("viewer").onclick=()=>{
-  document.getElementById("viewer").style.display="none";
-};
+loadBackground();
 </script>
 
 </body>
