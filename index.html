@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>아침 산책 기록</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0b0b0c;
+      color: white;
+    }
+    header {
+      padding: 24px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 16px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      margin-bottom: 16px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+    .gallery img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 8px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .month-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .month {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<header>🌅 아침 산책 기록</header>
+
+<div class="container">
+
+  <div class="card">
+    <input type="file" accept="image/*" capture="environment" id="photoInput">
+    <div class="stats-grid">
+      <div class="stat-box">이번 달<br><b id="monthCount">0</b>회</div>
+      <div class="stat-box">올해 기록<br><b id="yearCount">0</b>회</div>
+      <div class="stat-box">연속 산책<br><b id="streak">0</b>일</div>
+      <div class="stat-box">추정 거리<br><b id="distance">0</b>km</div>
+    </div>
+
+    <h4 style="margin-top:18px">📈 월별 기록</h4>
+    <div id="monthGrid" class="month-grid"></div>
+  </div>
+
+  <h3>📷 산책 기록</h3>
+  <div id="gallery" class="gallery"></div>
+
+</div>
+
+<script>
+const STORAGE_KEY = "morning_walk_records";
+let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function today() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function renderStats() {
+  const now = new Date();
+  const monthKey = now.toISOString().slice(0,7);
+  const yearKey = now.getFullYear().toString();
+
+  const monthCount = records.filter(r => r.date.startsWith(monthKey)).length;
+  const yearRecords = records.filter(r => r.date.startsWith(yearKey));
+
+  document.getElementById("monthCount").textContent = monthCount;
+  document.getElementById("yearCount").textContent = yearRecords.length;
+  document.getElementById("distance").textContent = yearRecords.length * 3;
+
+  const uniqueDates = [...new Set(records.map(r => r.date))].sort().reverse();
+
+  let streak = 0;
+  if (uniqueDates.length) {
+    let cursor = new Date(uniqueDates[0]);
+
+    for (let d of uniqueDates) {
+      const compare = new Date(d);
+      const diff = (cursor - compare) / 86400000;
+
+      if (diff === 0 || diff === 1) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      } else break;
+    }
+  }
+
+  document.getElementById("streak").textContent = streak;
+
+  const monthly = {};
+  yearRecords.forEach(r => {
+    const m = r.date.slice(5,7);
+    monthly[m] = (monthly[m] || 0) + 1;
+  });
+
+  const grid = document.getElementById("monthGrid");
+  grid.innerHTML = "";
+
+  for (let i=1;i<=12;i++){
+    const key = String(i).padStart(2,"0");
+    const div = document.createElement("div");
+    div.className = "month";
+    div.innerHTML = `${i}월<br><b>${monthly[key]||0}</b>`;
+    grid.appendChild(div);
+  }
+}
+
+function renderGallery() {
+  const container = document.getElementById("gallery");
+  container.innerHTML = "";
+
+  records.sort((a,b)=>b.date.localeCompare(a.date));
+
+  records.forEach(r => {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const img = document.createElement("img");
+    img.src = r.image;
+
+    const title = document.createElement("div");
+    title.textContent = r.date;
+
+    card.appendChild(img);
+    card.appendChild(title);
+    container.appendChild(card);
+  });
+}
+
+function renderAll(){
+  renderStats();
+  renderGallery();
+}
+
+// 사진 추가
+const input = document.getElementById("photoInput");
+input.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    records.push({
+      id: Date.now(),
+      date: today(),
+      image: reader.result
+    });
+
+    save();
+    renderAll();
+  };
+
+  reader.readAsDataURL(file);
+});
+
+renderAll();
+</script>
+
+</body>
+</html>
