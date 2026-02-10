@@ -108,7 +108,7 @@ function initSection(key, title) {
       <input type="file" accept="image/*" />
       <img class="preview" />
       <textarea placeholder="글을 천천히 남겨보세요"></textarea>
-      <button>저장하기</button>
+      <button type="button">저장하기</button>
     </div>
     <div class="viewer"></div>
   `;
@@ -134,7 +134,8 @@ function initSection(key, title) {
     reader.readAsDataURL(file);
   });
 
-  saveBtn.addEventListener('click', () => {
+  saveBtn.addEventListener('click', (e) => {
+    e.preventDefault();
     if (!tempImage) { alert('사진을 먼저 선택하세요'); return; }
     data.unshift({ img: tempImage, text: textarea.value, likes: 0 });
     localStorage.setItem(key, JSON.stringify(data));
