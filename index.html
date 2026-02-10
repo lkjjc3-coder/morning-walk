@@ -13,17 +13,8 @@ body {
   padding: 16px;
 }
 
-h1 {
-  text-align: center;
-  margin-bottom: 6px;
-}
-
-.subtitle {
-  text-align: center;
-  font-size: 14px;
-  opacity: 0.8;
-  margin-bottom: 20px;
-}
+h1 { text-align: center; margin-bottom: 6px; }
+.subtitle { text-align: center; font-size: 14px; opacity: .8; margin-bottom: 20px; }
 
 nav {
   display: flex;
@@ -31,98 +22,55 @@ nav {
   gap: 10px;
   margin-bottom: 24px;
 }
-
 nav button {
-  background: #222;
-  color: #fff;
-  border: none;
-  padding: 10px 18px;
-  border-radius: 24px;
-  cursor: pointer;
+  background: #222; color: #fff; border: none;
+  padding: 10px 18px; border-radius: 24px; cursor: pointer;
 }
-
-nav button.active {
-  background: #4caf50;
-}
+nav button.active { background: #4caf50; }
 
 .section { display: none; }
 .section.active { display: block; }
 
 .editor {
-  max-width: 720px;
-  margin: 0 auto 30px;
-  background: #1c1c1c;
-  padding: 16px;
-  border-radius: 16px;
+  max-width: 760px; margin: 0 auto 24px;
+  background: #1c1c1c; padding: 16px; border-radius: 16px;
 }
 
+.editor input[type="file"] { margin-bottom: 10px; }
+
 .preview {
-  width: 100%;
-  max-height: 360px;
-  object-fit: contain;
-  border-radius: 12px;
-  background: #000;
-  margin-bottom: 12px;
+  width: 100%; max-height: 360px; object-fit: contain;
+  border-radius: 12px; background: #000; margin-bottom: 12px; display:none;
 }
 
 .editor textarea {
-  width: 100%;
-  min-height: 120px;
-  background: #111;
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  padding: 12px;
-  resize: vertical;
-  margin-bottom: 12px;
+  width: 100%; min-height: 140px;
+  background: #111; color: #fff;
+  border: none; border-radius: 12px;
+  padding: 12px; resize: vertical; margin-bottom: 12px;
 }
 
 .editor button {
-  width: 100%;
-  background: #4caf50;
-  border: none;
-  color: #fff;
-  padding: 12px;
-  border-radius: 12px;
-  font-size: 15px;
-  cursor: pointer;
+  width: 100%; background: #4caf50; border: none; color: #fff;
+  padding: 12px; border-radius: 12px; font-size: 15px; cursor: pointer;
 }
 
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+.viewer {
+  max-width: 900px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
   gap: 16px;
 }
 
 .card {
   background: rgba(255,255,255,0.05);
-  border-radius: 14px;
-  padding: 10px;
+  border-radius: 14px; padding: 10px;
 }
-
-.card img {
-  width: 100%;
-  border-radius: 10px;
-}
-
-.card .text {
-  font-size: 14px;
-  margin: 8px 0;
-  opacity: 0.9;
-}
-
-.actions {
-  display: flex;
-  justify-content: space-between;
-}
-
+.card img { width: 100%; border-radius: 10px; }
+.card .text { font-size: 14px; margin: 8px 0; opacity: .9; }
+.actions { display: flex; justify-content: space-between; }
 .actions button {
-  background: #333;
-  border: none;
-  color: #fff;
-  border-radius: 8px;
-  padding: 4px 10px;
-  cursor: pointer;
+  background: #333; border: none; color: #fff;
+  border-radius: 8px; padding: 4px 10px; cursor: pointer;
 }
 </style>
 </head>
@@ -158,43 +106,40 @@ function initSection(key, title) {
     <div class="editor">
       <h2>${title}</h2>
       <input type="file" accept="image/*" />
-      <img class="preview" style="display:none" />
+      <img class="preview" />
       <textarea placeholder="글을 천천히 남겨보세요"></textarea>
       <button>저장하기</button>
     </div>
-    <h3 style="max-width:720px;margin:0 auto 12px;opacity:.8">📂 저장된 기록</h3>
-    <div class="gallery"></div>
+    <div class="viewer"></div>
   `;
 
   const input = container.querySelector('input');
   const preview = container.querySelector('.preview');
   const textarea = container.querySelector('textarea');
   const saveBtn = container.querySelector('button');
-  const gallery = container.querySelector('.gallery');
+  const viewer = container.querySelector('.viewer');
 
   let data = JSON.parse(localStorage.getItem(key) || '[]');
   let tempImage = null;
 
-  input.onchange = () => {
-    if (!input.files[0]) return;
+  input.addEventListener('change', () => {
+    const file = input.files[0];
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
       tempImage = e.target.result;
       preview.src = tempImage;
       preview.style.display = 'block';
     };
-    reader.readAsDataURL(input.files[0]);
-  };
+    reader.readAsDataURL(file);
+  });
 
-  saveBtn.onclick = () => {
-    if (!tempImage) {
-      alert('사진을 먼저 선택하세요');
-      return;
-    }
+  saveBtn.addEventListener('click', () => {
+    if (!tempImage) { alert('사진을 먼저 선택하세요'); return; }
     data.unshift({ img: tempImage, text: textarea.value, likes: 0 });
     localStorage.setItem(key, JSON.stringify(data));
 
-    // 초기화
+    // reset
     tempImage = null;
     preview.src = '';
     preview.style.display = 'none';
@@ -202,10 +147,10 @@ function initSection(key, title) {
     input.value = '';
 
     render();
-  };
+  });
 
   function render() {
-    gallery.innerHTML = '';
+    viewer.innerHTML = '';
     data.forEach((item, i) => {
       const card = document.createElement('div');
       card.className = 'card';
@@ -213,39 +158,27 @@ function initSection(key, title) {
         <img src="${item.img}" />
         <div class="text">${item.text || ''}</div>
         <div class="actions">
-          <button onclick="like('${key}',${i})">👍 ${item.likes}</button>
-          <button onclick="del('${key}',${i})">🗑</button>
+          <button data-like="${i}">👍 ${item.likes}</button>
+          <button data-del="${i}">🗑</button>
         </div>
       `;
-      gallery.appendChild(card);
+      card.querySelector('[data-like]').onclick = () => { data[i].likes++; save(); };
+      card.querySelector('[data-del]').onclick = () => { if(confirm('삭제할까요?')){ data.splice(i,1); save(); } };
+      viewer.appendChild(card);
     });
+  }
+
+  function save() {
+    localStorage.setItem(key, JSON.stringify(data));
+    render();
   }
 
   render();
 }
 
-function like(key, i) {
-  const data = JSON.parse(localStorage.getItem(key) || '[]');
-  if (!data[i]) return;
-  data[i].likes++;
-  localStorage.setItem(key, JSON.stringify(data));
-  // 해당 섹션만 다시 렌더
-  initSection(key, key === 'walk' ? '산책 사진과 기록' : key === 'meditation' ? '묵상 기록' : '일상 기록');
-}
-
-function del(key, i) {
-  if (!confirm('삭제할까요?')) return;
-  const data = JSON.parse(localStorage.getItem(key) || '[]');
-  if (!data[i]) return;
-  data.splice(i,1);
-  localStorage.setItem(key, JSON.stringify(data));
-  // 해당 섹션만 다시 렌더
-  initSection(key, key === 'walk' ? '산책 사진과 기록' : key === 'meditation' ? '묵상 기록' : '일상 기록');
-}
-
-initSection('walk','산책 사진과 기록');
-initSection('meditation','묵상 기록');
-initSection('record','일상 기록');
+initSection('walk','산책하기');
+initSection('meditation','묵상하기');
+initSection('record','기록하기');
 </script>
 
 </body>
