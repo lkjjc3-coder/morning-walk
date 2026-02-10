@@ -164,7 +164,7 @@ function initSection(key, title) {
 
     render();
 
-    viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });({ behavior: 'smooth', block: 'start' });
+    viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   function render() {
@@ -172,8 +172,6 @@ function initSection(key, title) {
       viewer.innerHTML = '<div style="grid-column:1/-1;opacity:.6;text-align:center;">아직 저장된 기록이 없습니다.</div>';
       return;
     }
-    viewer.innerHTML = '';
-
     viewer.innerHTML = '';
 
     const sorted = [...data].sort((a,b)=> new Date(b.date) - new Date(a.date));
