@@ -1,147 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아침 산책 기록</title>
+<style>
+body {
+  background:#111;
+  color:#fff;
+  font-family:system-ui;
+  margin:0;
+  padding:20px;
+}
+h1{text-align:center}
+nav{text-align:center;margin:20px}
+nav button{margin:0 6px;padding:8px 16px;border-radius:20px;border:none}
+.section{max-width:700px;margin:0 auto}
+.card{background:#1e1e1e;margin:12px 0;padding:14px;border-radius:12px}
+</style>
+</head>
+<body>
+
+<h1>🌅 아침 산책 기록</h1>
+
+<nav>
+  <button onclick="show('walk')">산책하기</button>
+  <button onclick="show('meditation')">묵상하기</button>
+  <button onclick="show('record')">기록하기</button>
+</nav>
+
+<div id="walk" class="section"></div>
+<div id="meditation" class="section" style="display:none"></div>
+<div id="record" class="section" style="display:none"></div>
+
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-
-const tabs = document.querySelectorAll('nav button');
-const sections = document.querySelectorAll('.section');
-
-tabs.forEach(btn => {
-  btn.addEventListener('click', () => {
-    tabs.forEach(b => b.classList.remove('active'));
-    sections.forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
-});
-
-function initSection(key, title) {
-  const container = document.getElementById(key);
-
-  container.innerHTML = `
-    <div class="editor">
-      <h2>${title}</h2>
-      <input type="file" accept="image/*" />
-      <img class="preview" />
-      <textarea placeholder="글을 천천히 남겨보세요"></textarea>
-      <button type="button">저장하기</button>
-    </div>
-    <div class="viewer"></div>
-  `;
-
-  const input = container.querySelector('input');
-  const preview = container.querySelector('.preview');
-  const textarea = container.querySelector('textarea');
-  const saveBtn = container.querySelector('button');
-  const viewer = container.querySelector('.viewer');
-
-  let data = JSON.parse(localStorage.getItem(key) || '[]');
-  let tempImage = null;
-
-  input.addEventListener('change', () => {
-    const file = input.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = e => {
-      tempImage = e.target.result;
-      preview.src = tempImage;
-      preview.style.display = 'block';
-    };
-    reader.readAsDataURL(file);
-  });
-
-  saveBtn.addEventListener('click', () => {
-    if (!tempImage && !textarea.value.trim()) {
-      alert('사진이나 글 중 하나는 입력해주세요.');
-      return;
-    }
-
-    data.unshift({
-      img: tempImage,
-      text: textarea.value.trim(),
-      likes: 0,
-      date: new Date().toISOString()
-    });
-
-    try {
-      localStorage.setItem(key, JSON.stringify(data));
-    } catch (e) {
-      alert(
-        '저장 공간이 부족하거나 브라우저가 저장을 차단했습니다.\n' +
-        '사진 용량을 줄이거나 다른 브라우저를 사용해 주세요.'
-      );
-      return;
-    }
-
-    tempImage = null;
-    preview.src = '';
-    preview.style.display = 'none';
-    textarea.value = '';
-    input.value = '';
-
-    render();
-  });
-
-  function render() {
-    viewer.innerHTML = '';
-
-    if (data.length === 0) {
-      viewer.innerHTML =
-        '<div style="grid-column:1/-1;opacity:.6;text-align:center;">아직 저장된 기록이 없습니다.</div>';
-      return;
-    }
-
-    const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-    sorted.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'card';
-
-      if (item.img) {
-        const img = document.createElement('img');
-        img.src = item.img;
-        card.appendChild(img);
-      }
-
-      if (item.text) {
-        const t = document.createElement('div');
-        t.className = 'text';
-        t.textContent = item.text;
-        card.appendChild(t);
-      }
-
-      const actions = document.createElement('div');
-      actions.className = 'actions';
-
-      const like = document.createElement('button');
-      like.textContent = `👍 ${item.likes}`;
-      like.onclick = () => {
-        item.likes++;
-        localStorage.setItem(key, JSON.stringify(data));
-        render();
-      };
-
-      const del = document.createElement('button');
-      del.textContent = '🗑';
-      del.onclick = () => {
-        if (confirm('삭제할까요?')) {
-          data = data.filter(d => d !== item);
-          localStorage.setItem(key, JSON.stringify(data));
-          render();
-        }
-      };
-
-      actions.append(like, del);
-      card.appendChild(actions);
-      viewer.appendChild(card);
-    });
-  }
-
-  render();
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.style.display='none');
+  document.getElementById(id).style.display='block';
 }
 
-initSection('walk','산책하기');
-initSection('meditation','묵상하기');
-initSection('record','기록하기');
+function init(key,title){
+  const el=document.getElementById(key);
+  el.innerHTML=`
+    <h2>${title}</h2>
+    <textarea id="${key}-text" style="width:100%;height:120px"></textarea>
+    <button onclick="save('${key}')">저장하기</button>
+    <div id="${key}-list"></div>
+  `;
+  render(key);
+}
 
-});
+function save(key){
+  const text=document.getElementById(key+'-text').value.trim();
+  if(!text){alert('글을 입력하세요');return;}
+  const data=JSON.parse(localStorage.getItem(key)||'[]');
+  data.unshift({text, date:new Date().toLocaleString()});
+  localStorage.setItem(key,JSON.stringify(data));
+  document.getElementById(key+'-text').value='';
+  render(key);
+}
+
+function render(key){
+  const list=document.getElementById(key+'-list');
+  const data=JSON.parse(localStorage.getItem(key)||'[]');
+  list.innerHTML='';
+  data.forEach(d=>{
+    const c=document.createElement('div');
+    c.className='card';
+    c.innerHTML=`<div>${d.text}</div><small>${d.date}</small>`;
+    list.appendChild(c);
+  });
+}
+
+init('walk','산책하기');
+init('meditation','묵상하기');
+init('record','기록하기');
 </script>
+
+</body>
+</html>
