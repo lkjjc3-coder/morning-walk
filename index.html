@@ -162,6 +162,7 @@ function initSection(key, title) {
       <textarea placeholder="글을 천천히 남겨보세요"></textarea>
       <button>저장하기</button>
     </div>
+    <h3 style="max-width:720px;margin:0 auto 12px;opacity:.8">📂 저장된 기록</h3>
     <div class="gallery"></div>
   `;
 
@@ -172,25 +173,36 @@ function initSection(key, title) {
   const gallery = container.querySelector('.gallery');
 
   let data = JSON.parse(localStorage.getItem(key) || '[]');
+  let tempImage = null;
 
   input.onchange = () => {
     if (!input.files[0]) return;
     const reader = new FileReader();
     reader.onload = e => {
-      preview.src = e.target.result;
+      tempImage = e.target.result;
+      preview.src = tempImage;
       preview.style.display = 'block';
     };
     reader.readAsDataURL(input.files[0]);
   };
+    reader.readAsDataURL(input.files[0]);
+  };
 
   saveBtn.onclick = () => {
-    if (!preview.src) return alert('사진을 먼저 선택하세요');
-    data.unshift({ img: preview.src, text: textarea.value, likes: 0 });
+    if (!tempImage) {
+      alert('사진을 먼저 선택하세요');
+      return;
+    }
+    data.unshift({ img: tempImage, text: textarea.value, likes: 0 });
     localStorage.setItem(key, JSON.stringify(data));
+
+    // 초기화
+    tempImage = null;
     preview.src = '';
     preview.style.display = 'none';
     textarea.value = '';
     input.value = '';
+
     render();
   };
 
