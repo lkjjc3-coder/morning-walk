@@ -112,16 +112,31 @@ nav button.active {
   border-radius: 10px;
 }
 
+.card .date {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-bottom: 6px;
+}
+
 .card .text {
   font-size: 14px;
   margin: 8px 0;
   white-space: pre-wrap;
 }
 
-.card .date {
-  font-size: 12px;
-  opacity: 0.6;
-  margin-bottom: 6px;
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.actions button {
+  background: #333;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
 }
 </style>
 </head>
@@ -200,6 +215,7 @@ function initSection(key, title) {
     data.unshift({
       img: tempImage,
       text: textarea.value.trim(),
+      likes: 0,
       date: new Date().toLocaleString()
     });
 
@@ -221,7 +237,7 @@ function initSection(key, title) {
       return;
     }
 
-    data.forEach(d => {
+    data.forEach((d, i) => {
       const card = document.createElement("div");
       card.className = "card";
 
@@ -239,7 +255,29 @@ function initSection(key, title) {
       text.className = "text";
       text.textContent = d.text;
 
-      card.append(date, text);
+      const actions = document.createElement("div");
+      actions.className = "actions";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.textContent = `👍 ${d.likes}`;
+      likeBtn.onclick = () => {
+        d.likes++;
+        localStorage.setItem(key, JSON.stringify(data));
+        render();
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.textContent = "🗑 삭제";
+      delBtn.onclick = () => {
+        if (confirm("삭제할까요?")) {
+          data.splice(i, 1);
+          localStorage.setItem(key, JSON.stringify(data));
+          render();
+        }
+      };
+
+      actions.append(likeBtn, delBtn);
+      card.append(date, text, actions);
       viewer.appendChild(card);
     });
   }
