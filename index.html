@@ -47,6 +47,12 @@
     .date-title { margin:18px 0 8px; font-weight:bold; opacity:0.9; }
 
     .like-btn { margin-top:6px; background:rgba(255,255,255,0.15); border:none; color:white; padding:6px 10px; border-radius:12px; cursor:pointer; }
+
+    .comments { margin-top:8px; }
+    .comment { font-size:13px; opacity:0.9; margin:2px 0; }
+    .comment-input { display:flex; gap:6px; margin-top:6px; }
+    .comment-input input { flex:1; margin:0; }
+    .comment-input button { padding:6px 10px; border-radius:8px; border:none; background:rgba(255,255,255,0.15); color:white; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -113,8 +119,13 @@ function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records));}
 
 function applyBackground(){
   const saved=localStorage.getItem(BG_KEY);
-  document.body.style.backgroundImage = saved
+  const url = saved
     ? `url('${saved}')`
+    : "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
+
+  // 배경 전체 속성을 다시 설정하여 일부 브라우저에서 이미지가 안 바뀌는 문제 해결
+  document.body.style.background = `${url} center / cover fixed no-repeat`;
+}')`
     : "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
 }
 
@@ -124,7 +135,7 @@ function removeBackground(){
   applyBackground();
 }
 
-function today(){return new Date().toISOString().slice(0,10);}
+function today(){return new Date().toISOString().slice(0,10);} 
 function setStatus(m){document.getElementById("uploadStatus").textContent=m;}
 function scrollToGallery(){document.getElementById("galleryTitle").scrollIntoView({behavior:"smooth"});}
 function scrollToTop(){window.scrollTo({top:0,behavior:"smooth"});}
@@ -196,6 +207,21 @@ function likeRecord(id){
   save(); renderAll();
 }
 
+function addComment(id, inputEl){
+  const text=inputEl.value.trim();
+  if(!text) return;
+  if(text.length>60){alert("댓글은 60자 이내로 입력해주세요.");return;}
+
+  const r=records.find(x=>x.id===id);
+  if(!r)return;
+
+  r.comments=r.comments||[];
+  r.comments.push(text);
+
+  inputEl.value="";
+  save(); renderAll();
+}
+
 function renderGallery(){
   const container=document.getElementById("gallery");
   container.innerHTML="";
@@ -244,8 +270,31 @@ function renderGallery(){
 
       const likeBtn=document.createElement("button");
       likeBtn.className="like-btn";
-      likeBtn.textContent=`🙏 은혜 받았습니다 (${r.likes||0})`;
+      likeBtn.textContent=`👍 좋아요 (${r.likes||0})`;
       likeBtn.onclick=()=>likeRecord(r.id);
+
+      const commentsWrap=document.createElement("div");
+      commentsWrap.className="comments";
+
+      (r.comments||[]).forEach(c=>{
+        const div=document.createElement("div");
+        div.className="comment";
+        div.textContent="💬 " + c;
+        commentsWrap.appendChild(div);
+      });
+
+      const commentInputWrap=document.createElement("div");
+      commentInputWrap.className="comment-input";
+
+      const commentInput=document.createElement("input");
+      commentInput.placeholder="짧은 댓글 남기기";
+
+      const commentBtn=document.createElement("button");
+      commentBtn.textContent="등록";
+      commentBtn.onclick=()=>addComment(r.id, commentInput);
+
+      commentInputWrap.appendChild(commentInput);
+      commentInputWrap.appendChild(commentBtn);
 
       const actions=document.createElement("div");
       actions.className="actions";
@@ -266,6 +315,8 @@ function renderGallery(){
       card.appendChild(img);
       card.appendChild(memo);
       card.appendChild(likeBtn);
+      card.appendChild(commentsWrap);
+      card.appendChild(commentInputWrap);
       card.appendChild(actions);
       grid.appendChild(card);
     });
@@ -296,7 +347,6 @@ function compressImage(file,callback){
   reader.readAsDataURL(file);
 }
 
-// 업로드
 photoInput.addEventListener("change",e=>{
   const file=e.target.files[0]; if(!file)return;
   setStatus("사진 저장 중...");
@@ -307,7 +357,8 @@ photoInput.addEventListener("change",e=>{
       date:today(),
       image:data,
       memo:document.getElementById("memoInput").value,
-      likes:0
+      likes:0,
+      comments:[]
     });
 
     document.getElementById("memoInput").value="";
@@ -318,13 +369,11 @@ photoInput.addEventListener("change",e=>{
   });
 });
 
-// 검색
 searchInput.addEventListener("input",e=>{
   searchKeyword=e.target.value.toLowerCase();
   renderGallery();
 });
 
-// 배경 업로드
 bgInput.addEventListener("change",e=>{
   const file=e.target.files[0]; if(!file)return;
   const reader=new FileReader();
@@ -335,7 +384,6 @@ bgInput.addEventListener("change",e=>{
   reader.readAsDataURL(file);
 });
 
-// 공유
 function exportRecords(){
   if(!records.length)return alert("내보낼 기록이 없습니다.");
   const blob=new Blob([JSON.stringify(records)],{type:"application/json"});
