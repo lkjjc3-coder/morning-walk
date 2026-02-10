@@ -90,6 +90,8 @@ nav button.active { background: #4caf50; }
 <div id="record" class="section"></div>
 
 <script>
+// DOM 로딩 완료 후 초기화 (저장 안 되던 핵심 원인 수정)
+document.addEventListener('DOMContentLoaded', () => {
 const tabs = document.querySelectorAll('nav button');
 const sections = document.querySelectorAll('.section');
 
@@ -138,8 +140,8 @@ function initSection(key, title) {
   });
 
   saveBtn.addEventListener('click', () => {
-    // 저장 버튼 클릭 디버그 표시
-    console.log('저장하기 클릭됨');
+    alert('저장 버튼이 눌렸습니다');
+
     if (!tempImage && !textarea.value.trim()) {
       alert('사진이나 글 중 하나는 입력해주세요');
       return;
@@ -154,10 +156,6 @@ function initSection(key, title) {
 
     localStorage.setItem(key, JSON.stringify(data));
 
-    // 저장 완료 시 사용자에게 시각적 피드백
-    saveBtn.textContent = '저장되었습니다 ✓';
-    setTimeout(() => saveBtn.textContent = '저장하기', 1200);
-
     tempImage = null;
     preview.src = '';
     preview.style.display = 'none';
@@ -166,8 +164,7 @@ function initSection(key, title) {
 
     render();
 
-    // 저장 후 자동으로 뷰어 위치로 스크롤
-    viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });({ behavior: 'smooth', block: 'start' });
   });
 
   function render() {
@@ -242,6 +239,7 @@ function initSection(key, title) {
 initSection('walk','산책하기');
 initSection('meditation','묵상하기');
 initSection('record','기록하기');
+});
 </script>
 
 </body>
