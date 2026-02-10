@@ -8,46 +8,91 @@
     body {
       margin: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      background: #0b0b0c;
+      /* ✅ 배경 사진 적용 (원하는 사진으로 교체 가능) */
+      background: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600") center/cover fixed no-repeat;
       color: white;
     }
+
+    /* 배경 위 가독성용 어두운 레이어 */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: -1;
+    }
+
     header {
-      padding: 24px;
+      padding: 20px;
       text-align: center;
       font-size: 22px;
       font-weight: bold;
+      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.35);
     }
+
+    /* 상단 메뉴 */
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      padding: 10px;
+      backdrop-filter: blur(6px);
+      background: rgba(0,0,0,0.25);
+      flex-wrap: wrap;
+    }
+
+    nav button {
+      background: rgba(255,255,255,0.15);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    nav button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
     .container {
       max-width: 1100px;
       margin: auto;
       padding: 16px;
     }
+
     .card {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.15);
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 20px;
+      backdrop-filter: blur(6px);
     }
+
     input[type="file"] {
       margin-bottom: 8px;
       color: white;
     }
+
     .helper {
       font-size: 13px;
-      opacity: 0.7;
+      opacity: 0.8;
       margin-bottom: 12px;
     }
+
     .status {
       font-size: 14px;
       margin-top: 6px;
-      opacity: 0.85;
+      opacity: 0.9;
     }
+
     .gallery {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 16px;
     }
+
     .gallery img {
       width: 100%;
       height: 200px;
@@ -55,48 +100,53 @@
       border-radius: 12px;
       margin-bottom: 8px;
     }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 12px;
     }
+
     .stat-box {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.1);
       padding: 14px;
       border-radius: 12px;
       text-align: center;
     }
+
     .month-grid {
       display: grid;
       grid-template-columns: repeat(6, 1fr);
       gap: 8px;
       margin-top: 12px;
     }
+
     .month {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.1);
       padding: 10px;
       border-radius: 10px;
       text-align: center;
       font-size: 14px;
     }
+
     .actions {
       display: flex;
       gap: 8px;
       margin-top: 8px;
     }
+
     .btn {
       flex: 1;
       padding: 8px;
       border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.08);
+      border: none;
+      background: rgba(255,255,255,0.15);
       color: white;
       cursor: pointer;
     }
+
     .btn:hover {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.3);
     }
   </style>
 </head>
@@ -104,14 +154,19 @@
 
 <header>🌅 아침 산책 기록</header>
 
+<nav>
+  <button onclick="scrollToTop()">홈</button>
+  <button onclick="scrollToGallery()">산책 기록</button>
+  <button onclick="alert('통계는 위에서 확인하세요.')">통계</button>
+  <button onclick="alert('앞으로 장소별 보기 추가 예정')">장소별</button>
+</nav>
+
 <div class="container">
 
   <div class="card">
-    <!-- 데스크탑/모바일 모두 저장된 파일 선택 가능 -->
     <input type="file" accept="image/*" id="photoInput">
     <div class="helper">
-      휴대폰 카메라 촬영 또는 이미 저장된 사진 파일을 선택할 수 있습니다.
-      업로드하면 오늘 기록에 자동 추가됩니다.
+      휴대폰 촬영 또는 저장된 사진을 선택할 수 있습니다.
     </div>
     <div id="uploadStatus" class="status"></div>
 
@@ -126,7 +181,7 @@
     <div id="monthGrid" class="month-grid"></div>
   </div>
 
-  <h3>📷 산책 기록</h3>
+  <h3 id="galleryTitle">📷 산책 기록</h3>
   <div id="gallery" class="gallery"></div>
 
 </div>
@@ -145,6 +200,14 @@ function today() {
 
 function setStatus(msg) {
   document.getElementById("uploadStatus").textContent = msg;
+}
+
+function scrollToGallery() {
+  document.getElementById("galleryTitle").scrollIntoView({behavior:"smooth"});
+}
+
+function scrollToTop() {
+  window.scrollTo({top:0,behavior:"smooth"});
 }
 
 function renderStats() {
@@ -197,8 +260,7 @@ function renderStats() {
 }
 
 function deleteRecord(id) {
-  if (!confirm("이 기록을 삭제할까요?")) return;
-
+  if (!confirm("삭제할까요?")) return;
   records = records.filter(r => r.id !== id);
   save();
   renderAll();
@@ -214,7 +276,6 @@ function replaceImage(id) {
     if (!file) return;
 
     const reader = new FileReader();
-
     reader.onload = () => {
       const target = records.find(r => r.id === id);
       if (target) {
@@ -272,27 +333,20 @@ function renderGallery() {
 function renderAll(){
   renderStats();
   renderGallery();
-  setStatus(`현재 저장된 기록: ${records.length}개`);
+  setStatus(`현재 기록 ${records.length}개`);
 }
 
 const input = document.getElementById("photoInput");
 
-input.addEventListener("click", () => {
-  input.value = "";
-});
-
 input.addEventListener("change", e => {
   const file = e.target.files[0];
-  if (!file) {
-    setStatus("파일이 선택되지 않았습니다.");
-    return;
-  }
+  if (!file) return;
 
-  setStatus("사진을 저장하는 중...");
+  setStatus("사진 저장 중...");
 
   const reader = new FileReader();
 
-  reader.onload = () => {
+  reader.onloadend = () => {
     records.push({
       id: Date.now(),
       date: today(),
@@ -301,12 +355,7 @@ input.addEventListener("change", e => {
 
     save();
     renderAll();
-
-    setStatus("사진이 기록에 추가되었습니다.");
-  };
-
-  reader.onerror = () => {
-    setStatus("파일 읽기 오류가 발생했습니다.");
+    setStatus("사진 저장 완료 ✅");
   };
 
   reader.readAsDataURL(file);
