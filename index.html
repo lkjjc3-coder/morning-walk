@@ -81,6 +81,23 @@
       text-align: center;
       font-size: 14px;
     }
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: white;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
   </style>
 </head>
 <body>
@@ -90,9 +107,12 @@
 <div class="container">
 
   <div class="card">
-    <!-- capture 속성 제거: 데스크탑 브라우저 호환성 개선 -->
+    <!-- 데스크탑/모바일 모두 저장된 파일 선택 가능 -->
     <input type="file" accept="image/*" id="photoInput">
-    <div class="helper">사진을 선택하면 자동으로 오늘 기록에 추가됩니다. 업로드 후 아래 갤러리에 바로 표시됩니다.</div>
+    <div class="helper">
+      휴대폰 카메라 촬영 또는 이미 저장된 사진 파일을 선택할 수 있습니다.
+      업로드하면 오늘 기록에 자동 추가됩니다.
+    </div>
     <div id="uploadStatus" class="status"></div>
 
     <div class="stats-grid">
@@ -124,8 +144,7 @@ function today() {
 }
 
 function setStatus(msg) {
-  const el = document.getElementById("uploadStatus");
-  el.textContent = msg;
+  document.getElementById("uploadStatus").textContent = msg;
 }
 
 function renderStats() {
@@ -177,6 +196,40 @@ function renderStats() {
   }
 }
 
+function deleteRecord(id) {
+  if (!confirm("이 기록을 삭제할까요?")) return;
+
+  records = records.filter(r => r.id !== id);
+  save();
+  renderAll();
+}
+
+function replaceImage(id) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const target = records.find(r => r.id === id);
+      if (target) {
+        target.image = reader.result;
+        save();
+        renderAll();
+      }
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  input.click();
+}
+
 function renderGallery() {
   const container = document.getElementById("gallery");
   container.innerHTML = "";
@@ -193,8 +246,25 @@ function renderGallery() {
     const title = document.createElement("div");
     title.textContent = r.date;
 
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn";
+    editBtn.textContent = "사진 수정";
+    editBtn.onclick = () => replaceImage(r.id);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn";
+    delBtn.textContent = "삭제";
+    delBtn.onclick = () => deleteRecord(r.id);
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
     card.appendChild(img);
     card.appendChild(title);
+    card.appendChild(actions);
     container.appendChild(card);
   });
 }
@@ -207,7 +277,6 @@ function renderAll(){
 
 const input = document.getElementById("photoInput");
 
-// 클릭 시 이전 선택 초기화 → 같은 파일 재선택 가능
 input.addEventListener("click", () => {
   input.value = "";
 });
@@ -233,11 +302,11 @@ input.addEventListener("change", e => {
     save();
     renderAll();
 
-    setStatus("사진이 정상적으로 기록에 추가되었습니다.");
+    setStatus("사진이 기록에 추가되었습니다.");
   };
 
   reader.onerror = () => {
-    setStatus("파일을 읽는 중 오류가 발생했습니다.");
+    setStatus("파일 읽기 오류가 발생했습니다.");
   };
 
   reader.readAsDataURL(file);
