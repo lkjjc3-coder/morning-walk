@@ -1,139 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>아침 산책 기록</title>
-
-<style>
-body {
-  font-family: system-ui, sans-serif;
-  background:#111;
-  color:#fff;
-  margin:0;
-  padding:16px;
-}
-
-h1 { text-align:center; margin-bottom:6px; }
-.subtitle {
-  text-align:center;
-  font-size:14px;
-  opacity:.8;
-  margin-bottom:20px;
-}
-
-nav {
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-bottom:24px;
-}
-nav button {
-  background:#222;
-  color:#fff;
-  border:none;
-  padding:10px 18px;
-  border-radius:24px;
-  cursor:pointer;
-}
-nav button.active { background:#4caf50; }
-
-.section { display:none; }
-.section.active { display:block; }
-
-.editor {
-  max-width:760px;
-  margin:0 auto 24px;
-  background:#1c1c1c;
-  padding:16px;
-  border-radius:16px;
-}
-
-.preview {
-  width:100%;
-  max-height:360px;
-  object-fit:contain;
-  border-radius:12px;
-  background:#000;
-  margin:12px 0;
-  display:none;
-}
-
-.editor textarea {
-  width:100%;
-  min-height:140px;
-  background:#111;
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:12px;
-  resize:vertical;
-}
-
-.editor button {
-  width:100%;
-  background:#4caf50;
-  border:none;
-  color:#fff;
-  padding:12px;
-  border-radius:12px;
-  font-size:15px;
-  cursor:pointer;
-  margin-top:10px;
-}
-
-.viewer {
-  max-width:900px;
-  margin:0 auto;
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-  gap:16px;
-}
-
-.card {
-  background:rgba(255,255,255,0.05);
-  border-radius:14px;
-  padding:10px;
-}
-.card img {
-  width:100%;
-  border-radius:10px;
-}
-.card .text {
-  font-size:14px;
-  margin:8px 0;
-  white-space:pre-wrap;
-}
-.actions {
-  display:flex;
-  justify-content:space-between;
-}
-.actions button {
-  background:#333;
-  border:none;
-  color:#fff;
-  border-radius:8px;
-  padding:4px 10px;
-  cursor:pointer;
-}
-</style>
-</head>
-
-<body>
-
-<h1>🌅 아침 산책 기록</h1>
-<div class="subtitle">아침 산책처럼 가볍게 남기는 나의 기록</div>
-
-<nav>
-  <button class="active" data-tab="walk">산책하기</button>
-  <button data-tab="meditation">묵상하기</button>
-  <button data-tab="record">기록하기</button>
-</nav>
-
-<div id="walk" class="section active"></div>
-<div id="meditation" class="section"></div>
-<div id="record" class="section"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -141,92 +5,112 @@ const tabs = document.querySelectorAll('nav button');
 const sections = document.querySelectorAll('.section');
 
 tabs.forEach(btn => {
-  btn.onclick = () => {
+  btn.addEventListener('click', () => {
     tabs.forEach(b => b.classList.remove('active'));
     sections.forEach(s => s.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById(btn.dataset.tab).classList.add('active');
-  };
+  });
 });
 
 function initSection(key, title) {
-  const el = document.getElementById(key);
-  el.innerHTML = `
+  const container = document.getElementById(key);
+
+  container.innerHTML = `
     <div class="editor">
       <h2>${title}</h2>
-      <input type="file" accept="image/*">
-      <img class="preview">
-      <textarea placeholder="글을 남겨보세요"></textarea>
-      <button>저장하기</button>
+      <input type="file" accept="image/*" />
+      <img class="preview" />
+      <textarea placeholder="글을 천천히 남겨보세요"></textarea>
+      <button type="button">저장하기</button>
     </div>
     <div class="viewer"></div>
   `;
 
-  const input = el.querySelector('input');
-  const preview = el.querySelector('.preview');
-  const textarea = el.querySelector('textarea');
-  const saveBtn = el.querySelector('button');
-  const viewer = el.querySelector('.viewer');
+  const input = container.querySelector('input');
+  const preview = container.querySelector('.preview');
+  const textarea = container.querySelector('textarea');
+  const saveBtn = container.querySelector('button');
+  const viewer = container.querySelector('.viewer');
 
   let data = JSON.parse(localStorage.getItem(key) || '[]');
-  let tempImg = null;
+  let tempImage = null;
 
-  input.onchange = () => {
+  input.addEventListener('change', () => {
     const file = input.files[0];
     if (!file) return;
-    const r = new FileReader();
-    r.onload = e => {
-      tempImg = e.target.result;
-      preview.src = tempImg;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      tempImage = e.target.result;
+      preview.src = tempImage;
       preview.style.display = 'block';
     };
-    r.readAsDataURL(file);
-  };
+    reader.readAsDataURL(file);
+  });
 
-  saveBtn.onclick = () => {
-    if (!tempImg && !textarea.value.trim()) {
+  saveBtn.addEventListener('click', () => {
+    if (!tempImage && !textarea.value.trim()) {
       alert('사진이나 글 중 하나는 입력해주세요.');
       return;
     }
 
     data.unshift({
-      img: tempImg,
+      img: tempImage,
       text: textarea.value.trim(),
       likes: 0,
       date: new Date().toISOString()
     });
 
-    localStorage.setItem(key, JSON.stringify(data));
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      alert(
+        '저장 공간이 부족하거나 브라우저가 저장을 차단했습니다.\n' +
+        '사진 용량을 줄이거나 다른 브라우저를 사용해 주세요.'
+      );
+      return;
+    }
 
-    tempImg = null;
+    tempImage = null;
+    preview.src = '';
     preview.style.display = 'none';
     textarea.value = '';
     input.value = '';
 
     render();
-  };
+  });
 
   function render() {
     viewer.innerHTML = '';
-    data.forEach(item => {
-      const c = document.createElement('div');
-      c.className = 'card';
+
+    if (data.length === 0) {
+      viewer.innerHTML =
+        '<div style="grid-column:1/-1;opacity:.6;text-align:center;">아직 저장된 기록이 없습니다.</div>';
+      return;
+    }
+
+    const sorted = [...data].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    sorted.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'card';
 
       if (item.img) {
-        const i = document.createElement('img');
-        i.src = item.img;
-        c.appendChild(i);
+        const img = document.createElement('img');
+        img.src = item.img;
+        card.appendChild(img);
       }
 
       if (item.text) {
         const t = document.createElement('div');
         t.className = 'text';
         t.textContent = item.text;
-        c.appendChild(t);
+        card.appendChild(t);
       }
 
-      const a = document.createElement('div');
-      a.className = 'actions';
+      const actions = document.createElement('div');
+      actions.className = 'actions';
 
       const like = document.createElement('button');
       like.textContent = `👍 ${item.likes}`;
@@ -246,9 +130,9 @@ function initSection(key, title) {
         }
       };
 
-      a.append(like, del);
-      c.appendChild(a);
-      viewer.appendChild(c);
+      actions.append(like, del);
+      card.appendChild(actions);
+      viewer.appendChild(card);
     });
   }
 
@@ -261,6 +145,3 @@ initSection('record','기록하기');
 
 });
 </script>
-
-</body>
-</html>
