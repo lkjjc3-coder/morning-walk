@@ -1,131 +1,203 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>아침 산책 기록</title>
 <style>
-/* ✅ 처음 버전의 단순함으로 롤백 */
 body {
-  font-family: sans-serif;
-  text-align: center;
+  font-family: system-ui, sans-serif;
   background: #111;
   color: #fff;
   margin: 0;
-  padding: 20px;
+  padding: 16px;
 }
 
-h1 { margin-bottom: 10px; }
+h1 {
+  text-align: center;
+  margin-bottom: 6px;
+}
 
-p {
+.subtitle {
+  text-align: center;
   font-size: 14px;
   opacity: 0.8;
   margin-bottom: 20px;
 }
 
-input[type="file"] {
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
   margin-bottom: 20px;
 }
 
-#gallery {
+nav button {
+  background: #222;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+nav button.active {
+  background: #4caf50;
+}
+
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+.upload-box {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gallery {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
 }
 
 .card {
+  background: rgba(0,0,0,0.4);
+  border-radius: 12px;
+  padding: 10px;
   margin: 10px;
+  width: 220px;
 }
 
-.photo {
+.card img {
   width: 200px;
   border-radius: 10px;
   cursor: pointer;
-  display: block;
 }
 
-button {
+.card textarea {
+  width: 100%;
   margin-top: 6px;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.actions button {
+  background: #333;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
 }
 </style>
 </head>
 <body>
 
 <h1>🌅 아침 산책 기록</h1>
-<p>아침 산책처럼 가볍게 남기는 나의 기록</p>
+<div class="subtitle">아침 산책처럼 가볍게 남기는 나의 기록</div>
 
-<input type="file" id="photoInput" accept="image/*">
+<nav>
+  <button class="active" onclick="switchTab('walk')">산책하기</button>
+  <button onclick="switchTab('meditation')">묵상하기</button>
+  <button onclick="switchTab('record')">기록하기</button>
+</nav>
 
-<div id="gallery"></div>
+<div id="walk" class="section active"></div>
+<div id="meditation" class="section"></div>
+<div id="record" class="section"></div>
 
 <script>
-/* =================
-   핵심 목표
-   1. 사진 업로드 정상
-   2. 배경 변경 정상
-   3. 나머지는 건드리지 않음
-   ================= */
+const sections = ['walk','meditation','record'];
 
-const fileInput = document.getElementById("photoInput");
-const gallery = document.getElementById("gallery");
-
-let photos = JSON.parse(localStorage.getItem("photos") || "[]");
-
-fileInput.addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    photos.unshift(e.target.result);
-    save();
-    render();
-  };
-  reader.readAsDataURL(file);
-
-  this.value = ""; // 같은 파일 다시 선택 가능
-});
-
-function save() {
-  localStorage.setItem("photos", JSON.stringify(photos));
-}
-
-function render() {
-  gallery.innerHTML = "";
-  photos.forEach(src => {
-    const card = document.createElement("div");
-    card.className = "card";
-
-    const img = document.createElement("img");
-    img.src = src;
-    img.className = "photo";
-
-    // 사진 클릭 → 배경 변경
-    img.onclick = () => setBackground(src);
-
-    card.appendChild(img);
-    gallery.appendChild(card);
+function switchTab(tab) {
+  sections.forEach(s => {
+    document.getElementById(s).classList.remove('active');
   });
+  document.getElementById(tab).classList.add('active');
+
+  document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+  event.target.classList.add('active');
 }
 
-function setBackground(src) {
-  document.body.style.backgroundImage = `url(${src})`;
-  document.body.style.backgroundSize = "cover";
-  document.body.style.backgroundPosition = "center";
-  localStorage.setItem("bgImage", src);
-}
+function initSection(key, title) {
+  const container = document.getElementById(key);
 
-function loadBackground() {
-  const bg = localStorage.getItem("bgImage");
-  if (bg) {
-    document.body.style.backgroundImage = `url(${bg})`;
-    document.body.style.backgroundSize = "cover";
-    document.body.style.backgroundPosition = "center";
+  container.innerHTML = `
+    <div class="upload-box">
+      <h2>${title}</h2>
+      <input type="file" accept="image/*" />
+      <textarea placeholder="글을 남겨보세요"></textarea>
+      <button>저장</button>
+    </div>
+    <div class="gallery"></div>
+  `;
+
+  const input = container.querySelector('input');
+  const text = container.querySelector('textarea');
+  const saveBtn = container.querySelector('button');
+  const gallery = container.querySelector('.gallery');
+
+  let data = JSON.parse(localStorage.getItem(key) || '[]');
+
+  saveBtn.onclick = () => {
+    if (!input.files[0]) return alert('사진을 선택하세요');
+    const reader = new FileReader();
+    reader.onload = e => {
+      data.unshift({ img: e.target.result, text: text.value, likes: 0 });
+      localStorage.setItem(key, JSON.stringify(data));
+      input.value = '';
+      text.value = '';
+      render();
+    };
+    reader.readAsDataURL(input.files[0]);
+  };
+
+  function render() {
+    gallery.innerHTML = '';
+    data.forEach((item, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${item.img}" />
+        <div>${item.text || ''}</div>
+        <div class="actions">
+          <button onclick="like('${key}',${i})">👍 ${item.likes}</button>
+          <button onclick="del('${key}',${i})">🗑</button>
+        </div>
+      `;
+      gallery.appendChild(card);
+    });
   }
+
+  render();
 }
 
-render();
-loadBackground();
+function like(key, i) {
+  const data = JSON.parse(localStorage.getItem(key));
+  data[i].likes++;
+  localStorage.setItem(key, JSON.stringify(data));
+  location.reload();
+}
+
+function del(key, i) {
+  if (!confirm('삭제할까요?')) return;
+  const data = JSON.parse(localStorage.getItem(key));
+  data.splice(i,1);
+  localStorage.setItem(key, JSON.stringify(data));
+  location.reload();
+}
+
+initSection('walk','산책 사진과 기록');
+initSection('meditation','묵상 기록');
+initSection('record','일상 기록');
 </script>
 
 </body>
