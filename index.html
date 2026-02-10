@@ -141,7 +141,7 @@ saveBtn.onclick = () => {
       alert('사진을 먼저 선택하세요');
       return;
     }
-    data.unshift({ img: tempImage, text: textarea.value, likes: 0 });
+    data.unshift({ img: tempImage, text: textarea.value, likes: 0, date: new Date().toISOString() });
     localStorage.setItem(key, JSON.stringify(data));
 
     // reset
@@ -156,21 +156,47 @@ saveBtn.onclick = () => {
 
   function render() {
     viewer.innerHTML = '';
-    data.forEach((item, i) => {
+
+    // 날짜순(최신 → 과거) 정렬
+    const sorted = [...data].sort((a,b)=> new Date(b.date) - new Date(a.date));
+
+    let currentDate = '';
+    sorted.forEach((item, i) => {
+      const dateStr = new Date(item.date).toLocaleDateString('ko-KR');
+      if (dateStr !== currentDate) {
+        currentDate = dateStr;
+        const dateHeader = document.createElement('h3');
+        dateHeader.style.gridColumn = '1 / -1';
+        dateHeader.style.opacity = '.7';
+        dateHeader.textContent = dateStr;
+        viewer.appendChild(dateHeader);
+      }
+
       const card = document.createElement('div');
       card.className = 'card';
       card.innerHTML = `
         <img src="${item.img}" />
         <div class="text">${item.text || ''}</div>
         <div class="actions">
-          <button data-like="${i}">👍 ${item.likes}</button>
-          <button data-del="${i}">🗑</button>
+          <button data-like>👍 ${item.likes}</button>
+          <button data-del>🗑</button>
         </div>
       `;
-      card.querySelector('[data-like]').onclick = () => { data[i].likes++; save(); };
-      card.querySelector('[data-del]').onclick = () => { if(confirm('삭제할까요?')){ data.splice(i,1); save(); } };
+
+      card.querySelector('[data-like]').onclick = () => {
+        item.likes++;
+        save();
+      };
+      card.querySelector('[data-del]').onclick = () => {
+        if(confirm('삭제할까요?')){
+          const idx = data.indexOf(item);
+          if(idx>-1) data.splice(idx,1);
+          save();
+        }
+      };
       viewer.appendChild(card);
     });
+  });
   }
 
   function save() {
