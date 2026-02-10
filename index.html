@@ -138,6 +138,8 @@ function initSection(key, title) {
   });
 
   saveBtn.addEventListener('click', () => {
+    // 저장 버튼 클릭 디버그 표시
+    console.log('저장하기 클릭됨');
     if (!tempImage && !textarea.value.trim()) {
       alert('사진이나 글 중 하나는 입력해주세요');
       return;
@@ -152,6 +154,10 @@ function initSection(key, title) {
 
     localStorage.setItem(key, JSON.stringify(data));
 
+    // 저장 완료 시 사용자에게 시각적 피드백
+    saveBtn.textContent = '저장되었습니다 ✓';
+    setTimeout(() => saveBtn.textContent = '저장하기', 1200);
+
     tempImage = null;
     preview.src = '';
     preview.style.display = 'none';
@@ -159,9 +165,18 @@ function initSection(key, title) {
     input.value = '';
 
     render();
+
+    // 저장 후 자동으로 뷰어 위치로 스크롤
+    viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   function render() {
+    if (data.length === 0) {
+      viewer.innerHTML = '<div style="grid-column:1/-1;opacity:.6;text-align:center;">아직 저장된 기록이 없습니다.</div>';
+      return;
+    }
+    viewer.innerHTML = '';
+
     viewer.innerHTML = '';
 
     const sorted = [...data].sort((a,b)=> new Date(b.date) - new Date(a.date));
