@@ -5,196 +5,200 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>아침 산책 기록</title>
 <style>
+/* 🌿 따뜻한 톤 디자인 */
 body {
-  font-family: sans-serif;
+  font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   text-align: center;
-  background-size: cover;
-  background-position: center;
-  background-color: #111;
-  color: white;
+  background: #2b2b2b;
+  color: #f5f1ea;
   margin: 0;
-  padding: 20px;
+  padding: 16px;
 }
 
-h1 { margin-bottom: 20px; }
+h1 { margin: 12px 0 6px; }
+
+p.subtitle {
+  opacity: 0.8;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+input[type="file"], textarea {
+  width: 100%;
+  max-width: 420px;
+  margin: 6px auto;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+}
 
 #gallery {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
 }
 
 .card {
-  margin: 10px;
-  background: rgba(0,0,0,0.4);
+  background: rgba(0,0,0,0.35);
   padding: 10px;
-  border-radius: 12px;
-  width: 220px;
+  border-radius: 14px;
+}
+
+.date-label {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-bottom: 4px;
 }
 
 .photo {
-  width: 200px;
-  border-radius: 10px;
-  cursor: pointer;
-  display: block;
-}
-
-.actions button {
-  margin-top: 5px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
   cursor: pointer;
 }
 
-.comment-input {
-  width: 90%;
-  margin-top: 6px;
-}
-
-.comment-list {
-  font-size: 13px;
+.memo {
+  font-size: 14px;
   text-align: left;
-  margin-top: 6px;
-  max-height: 80px;
-  overflow-y: auto;
-}
-
-.comment-item {
+  margin: 6px 0;
   opacity: 0.9;
 }
 
-input[type="file"] {
-  margin-bottom: 20px;
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.actions button {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 6px;
+  background: #6b5f4b;
+  color: #fff;
+}
+
+.comment-input {
+  width: 100%;
+  margin-top: 6px;
+  border-radius: 8px;
+}
+
+.comment {
+  font-size: 13px;
+  text-align: left;
+  opacity: 0.85;
+}
+
+/* 🖼 이미지 뷰어 */
+#viewer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 999;
+  justify-content: center;
+  align-items: center;
+}
+
+#viewer img {
+  max-width: 92%;
+  max-height: 92%;
+  border-radius: 16px;
+}
+
+/* 📱 모바일 최적화 */
+@media (max-width: 600px) {
+  h1 { font-size: 20px; }
 }
 </style>
 </head>
 <body>
 
 <h1>🌅 아침 산책 기록</h1>
-<p style="opacity:0.8; font-size:14px; margin-top:-10px;">아침 산책처럼 가볍게 남기는 나의 기록</p>
+<p class="subtitle">아침 산책처럼 가볍게 남기는 나의 기록</p>
 
 <input type="file" id="photoInput" accept="image/*" multiple>
+<textarea id="memoInput" placeholder="오늘 산책 묵상을 한 줄 남겨보세요"></textarea>
 
 <div id="gallery"></div>
 
+<!-- 🖼 사진 크게 보기 -->
+<div id="viewer" onclick="this.style.display='none'">
+  <img id="viewerImg">
+</div>
+
 <script>
 const fileInput = document.getElementById("photoInput");
+const memoInput = document.getElementById("memoInput");
 const gallery = document.getElementById("gallery");
+const viewer = document.getElementById("viewer");
+const viewerImg = document.getElementById("viewerImg");
+
+const ADMIN_KEY = "morningwalk_admin";
+let isAdmin = localStorage.getItem(ADMIN_KEY) === "yes";
 
 let records = JSON.parse(localStorage.getItem("records") || "[]");
 
-/* ================= 업로드 ================= */
-fileInput.addEventListener("change", function () {
-  const file = this.files[0];
-  if (!file) return;
+if (!isAdmin) {
+  const pw = prompt("관리자 비밀번호를 입력하세요 (취소하면 보기 전용)");
+  if (pw === "walk2026") {
+    localStorage.setItem(ADMIN_KEY, "yes");
+    isAdmin = true;
+  }
+}
 
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const record = {
-      src: e.target.result,
-      likes: 0,
-      comments: [],
-      date: new Date().toISOString().slice(0,10)
+fileInput.addEventListener("change", () => {
+  const files = Array.from(fileInput.files);
+  files.forEach(file => {
+    if (!file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      records.unshift({
+        src: e.target.result,
+        memo: memoInput.value,
+        date: new Date().toISOString().slice(0,10),
+        likes: 0,
+        comments: []
+      });
+      memoInput.value = "";
+      save(); render();
     };
-
-    records.unshift(record);
-    saveRecords();
-    renderAll();
-  };
-  reader.readAsDataURL(file);
-
-  // 같은 파일 다시 선택 가능하게 초기화
-  this.value = "";
+    reader.readAsDataURL(file);
+  });
+  fileInput.value = "";
 });
 
-/* ================= 저장 ================= */
-function saveRecords() {
-  localStorage.setItem("records", JSON.stringify(records));
-}
+function save(){ localStorage.setItem("records", JSON.stringify(records)); }
 
-/* ================= 화면 그리기 ================= */
-function renderAll() {
+function render(){
   gallery.innerHTML = "";
-  records.forEach((rec, index) => addPhoto(rec, index));
-}
+  records.forEach((r,i)=>{
+    const card = document.createElement("div"); card.className="card";
+    const date = document.createElement("div"); date.className="date-label"; date.textContent=r.date;
+    const img = document.createElement("img"); img.className="photo"; img.src=r.src;
+    img.onclick=()=>{ viewerImg.src=r.src; viewer.style.display="flex"; };
+    const memo = document.createElement("div"); memo.className="memo"; memo.textContent=r.memo||"";
 
-function addPhoto(rec, index) {
-  const card = document.createElement("div");
-  card.className = "card";
+    const like = document.createElement("button"); like.textContent=`👍 ${r.likes}`;
+    like.onclick=()=>{ r.likes++; save(); render(); };
 
-  const dateLabel = document.createElement("div");
-  dateLabel.style.fontSize = "12px";
-  dateLabel.style.opacity = "0.7";
-  dateLabel.style.marginBottom = "4px";
-  dateLabel.textContent = rec.date || "";
+    const actions = document.createElement("div"); actions.className="actions"; actions.append(like);
 
-  const img = document.createElement("img");
-  img.src = rec.src;
-  img.className = "photo";
-
-  img.onclick = () => setBackground(rec.src);
-
-  const likeBtn = document.createElement("button");
-  likeBtn.textContent = `👍 좋아요 ${rec.likes}`;
-  likeBtn.onclick = () => {
-    rec.likes++;
-    saveRecords();
-    renderAll();
-  };
-
-  const delBtn = document.createElement("button");
-  delBtn.textContent = "🗑 삭제";
-  delBtn.onclick = () => {
-    if (!confirm("이 사진을 삭제할까요?")) return;
-    records.splice(index, 1);
-    saveRecords();
-    renderAll();
-  };
-
-  const actions = document.createElement("div");
-  actions.className = "actions";
-  actions.append(likeBtn, delBtn);
-
-  const commentInput = document.createElement("input");
-  commentInput.placeholder = "짧은 댓글 남기기";
-  commentInput.className = "comment-input";
-
-  commentInput.addEventListener("keydown", e => {
-    if (e.key === "Enter" && commentInput.value.trim()) {
-      rec.comments.push(commentInput.value.trim());
-      commentInput.value = "";
-      saveRecords();
-      renderAll();
+    if(isAdmin){
+      const del=document.createElement("button"); del.textContent="삭제";
+      del.onclick=()=>{ if(confirm("삭제할까요?")){ records.splice(i,1); save(); render(); }};
+      actions.append(del);
     }
+
+    card.append(date,img,memo,actions);
+    gallery.append(card);
   });
-
-  const commentList = document.createElement("div");
-  commentList.className = "comment-list";
-
-  rec.comments.slice(-3).forEach(c => {
-    const div = document.createElement("div");
-    div.className = "comment-item";
-    div.textContent = "💬 " + c;
-    commentList.append(div);
-  });
-
-  card.append(dateLabel, img, actions, commentInput, commentList);
-  gallery.append(card);
 }
 
-/* ================= 배경 설정 ================= */
-function setBackground(src) {
-  document.body.style.backgroundImage = `url(${src})`;
-  localStorage.setItem("bgImage", src);
-}
-
-function loadBackground() {
-  const bg = localStorage.getItem("bgImage");
-  if (bg) document.body.style.backgroundImage = `url(${bg})`;
-}
-
-/* ================= 초기 실행 ================= */
-renderAll();
-loadBackground();
+render();
 </script>
-
 </body>
 </html>
