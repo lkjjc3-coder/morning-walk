@@ -134,9 +134,13 @@ function initSection(key, title) {
     reader.readAsDataURL(file);
   });
 
-  saveBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (!tempImage) { alert('사진을 먼저 선택하세요'); return; }
+  // 저장 버튼 (중복 안전 처리)
+saveBtn.onclick = () => {
+    console.log('save clicked');
+    if (!tempImage) {
+      alert('사진을 먼저 선택하세요');
+      return;
+    }
     data.unshift({ img: tempImage, text: textarea.value, likes: 0 });
     localStorage.setItem(key, JSON.stringify(data));
 
@@ -148,7 +152,7 @@ function initSection(key, title) {
     input.value = '';
 
     render();
-  });
+  };
 
   function render() {
     viewer.innerHTML = '';
