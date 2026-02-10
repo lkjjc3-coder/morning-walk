@@ -30,7 +30,18 @@
       margin-bottom: 20px;
     }
     input[type="file"] {
-      margin-bottom: 16px;
+      margin-bottom: 8px;
+      color: white;
+    }
+    .helper {
+      font-size: 13px;
+      opacity: 0.7;
+      margin-bottom: 12px;
+    }
+    .status {
+      font-size: 14px;
+      margin-top: 6px;
+      opacity: 0.85;
     }
     .gallery {
       display: grid;
@@ -79,7 +90,11 @@
 <div class="container">
 
   <div class="card">
-    <input type="file" accept="image/*" capture="environment" id="photoInput">
+    <!-- capture 속성 제거: 데스크탑 브라우저 호환성 개선 -->
+    <input type="file" accept="image/*" id="photoInput">
+    <div class="helper">사진을 선택하면 자동으로 오늘 기록에 추가됩니다. 업로드 후 아래 갤러리에 바로 표시됩니다.</div>
+    <div id="uploadStatus" class="status"></div>
+
     <div class="stats-grid">
       <div class="stat-box">이번 달<br><b id="monthCount">0</b>회</div>
       <div class="stat-box">올해 기록<br><b id="yearCount">0</b>회</div>
@@ -106,6 +121,11 @@ function save() {
 
 function today() {
   return new Date().toISOString().slice(0,10);
+}
+
+function setStatus(msg) {
+  const el = document.getElementById("uploadStatus");
+  el.textContent = msg;
 }
 
 function renderStats() {
@@ -182,15 +202,27 @@ function renderGallery() {
 function renderAll(){
   renderStats();
   renderGallery();
+  setStatus(`현재 저장된 기록: ${records.length}개`);
 }
 
-// 사진 추가
 const input = document.getElementById("photoInput");
+
+// 클릭 시 이전 선택 초기화 → 같은 파일 재선택 가능
+input.addEventListener("click", () => {
+  input.value = "";
+});
+
 input.addEventListener("change", e => {
   const file = e.target.files[0];
-  if (!file) return;
+  if (!file) {
+    setStatus("파일이 선택되지 않았습니다.");
+    return;
+  }
+
+  setStatus("사진을 저장하는 중...");
 
   const reader = new FileReader();
+
   reader.onload = () => {
     records.push({
       id: Date.now(),
@@ -200,6 +232,12 @@ input.addEventListener("change", e => {
 
     save();
     renderAll();
+
+    setStatus("사진이 정상적으로 기록에 추가되었습니다.");
+  };
+
+  reader.onerror = () => {
+    setStatus("파일을 읽는 중 오류가 발생했습니다.");
   };
 
   reader.readAsDataURL(file);
