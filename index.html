@@ -4,16 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>아침 산책 기록</title>
+  <link rel="icon" href="data:,">
   <style>
     body {
       margin: 0;
       font-family: system-ui, -apple-system, sans-serif;
-      /* ✅ 배경 사진 적용 (원하는 사진으로 교체 가능) */
-      background: url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600") center/cover fixed no-repeat;
       color: white;
+      background: center/cover fixed no-repeat;
     }
 
-    /* 배경 위 가독성용 어두운 레이어 */
     body::before {
       content: "";
       position: fixed;
@@ -31,7 +30,6 @@
       background: rgba(0,0,0,0.35);
     }
 
-    /* 상단 메뉴 */
     nav {
       display: flex;
       justify-content: center;
@@ -101,6 +99,12 @@
       margin-bottom: 8px;
     }
 
+    .empty {
+      opacity: 0.7;
+      padding: 20px;
+      text-align: center;
+    }
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -164,11 +168,20 @@
 <div class="container">
 
   <div class="card">
+    <h4>📷 산책 사진 업로드</h4>
     <input type="file" accept="image/*" id="photoInput">
     <div class="helper">
       휴대폰 촬영 또는 저장된 사진을 선택할 수 있습니다.
     </div>
     <div id="uploadStatus" class="status"></div>
+
+    <hr style="margin:16px 0;border-color:rgba(255,255,255,0.2)">
+
+    <h4>🖼 배경 화면 설정</h4>
+    <input type="file" accept="image/*" id="bgInput">
+    <div class="actions">
+      <button class="btn" onclick="removeBackground()">배경 삭제</button>
+    </div>
 
     <div class="stats-grid">
       <div class="stat-box">이번 달<br><b id="monthCount">0</b>회</div>
@@ -188,10 +201,29 @@
 
 <script>
 const STORAGE_KEY = "morning_walk_records";
+const BG_KEY = "morning_walk_bg";
+
 let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
 
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function applyBackground() {
+  const saved = localStorage.getItem(BG_KEY);
+
+  if (saved) {
+    document.body.style.backgroundImage = `url('${saved}')`;
+  } else {
+    document.body.style.backgroundImage =
+      "url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600')";
+  }
+}
+
+function removeBackground() {
+  if (!confirm("배경을 삭제하고 기본 화면으로 바꿀까요?")) return;
+  localStorage.removeItem(BG_KEY);
+  applyBackground();
 }
 
 function today() {
@@ -295,6 +327,11 @@ function renderGallery() {
   const container = document.getElementById("gallery");
   container.innerHTML = "";
 
+  if (!records.length) {
+    container.innerHTML = '<div class="empty">아직 업로드된 산책 기록이 없습니다.<br>위에서 사진을 추가해 보세요.</div>';
+    return;
+  }
+
   records.sort((a,b)=>b.date.localeCompare(a.date));
 
   records.forEach(r => {
@@ -338,29 +375,80 @@ function renderAll(){
 
 const input = document.getElementById("photoInput");
 
+// 큰 사진을 데스크탑에서도 저장 가능하도록 용량을 줄여 저장
+function compressImage(file, callback) {
+  const reader = new FileReader();
+
+  reader.onload = e => {
+    const img = new Image();
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      const MAX_WIDTH = 1600;
+      const scale = Math.min(1, MAX_WIDTH / img.width);
+
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // 품질을 낮춰 저장 용량 감소
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+      callback(dataUrl);
+    };
+
+    img.src = e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
 input.addEventListener("change", e => {
   const file = e.target.files[0];
   if (!file) return;
 
   setStatus("사진 저장 중...");
 
+  compressImage(file, (imageData) => {
+    try {
+      records.push({
+        id: Date.now(),
+        date: today(),
+        image: imageData
+      });
+
+      save();
+      renderAll();
+      setStatus("사진 저장 완료 ✅");
+
+      e.target.value = "";
+      setTimeout(scrollToGallery, 300);
+    } catch (err) {
+      setStatus("저장 공간이 부족합니다. 일부 사진을 삭제해 주세요.");
+    }
+  });
+});
+
+// 배경 업로드
+const bgInput = document.getElementById("bgInput");
+
+bgInput.addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
   const reader = new FileReader();
-
-  reader.onloadend = () => {
-    records.push({
-      id: Date.now(),
-      date: today(),
-      image: reader.result
-    });
-
-    save();
-    renderAll();
-    setStatus("사진 저장 완료 ✅");
+  reader.onload = () => {
+    localStorage.setItem(BG_KEY, reader.result);
+    applyBackground();
+    e.target.value = "";
   };
 
   reader.readAsDataURL(file);
 });
 
+applyBackground();
 renderAll();
 </script>
 
