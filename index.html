@@ -185,8 +185,6 @@ function initSection(key, title) {
     };
     reader.readAsDataURL(input.files[0]);
   };
-    reader.readAsDataURL(input.files[0]);
-  };
 
   saveBtn.onclick = () => {
     if (!tempImage) {
@@ -227,18 +225,22 @@ function initSection(key, title) {
 }
 
 function like(key, i) {
-  const data = JSON.parse(localStorage.getItem(key));
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  if (!data[i]) return;
   data[i].likes++;
   localStorage.setItem(key, JSON.stringify(data));
-  location.reload();
+  // 해당 섹션만 다시 렌더
+  initSection(key, key === 'walk' ? '산책 사진과 기록' : key === 'meditation' ? '묵상 기록' : '일상 기록');
 }
 
 function del(key, i) {
   if (!confirm('삭제할까요?')) return;
-  const data = JSON.parse(localStorage.getItem(key));
+  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  if (!data[i]) return;
   data.splice(i,1);
   localStorage.setItem(key, JSON.stringify(data));
-  location.reload();
+  // 해당 섹션만 다시 렌더
+  initSection(key, key === 'walk' ? '산책 사진과 기록' : key === 'meditation' ? '묵상 기록' : '일상 기록');
 }
 
 initSection('walk','산책 사진과 기록');
