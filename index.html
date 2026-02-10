@@ -68,9 +68,10 @@ input[type="file"] {
 </head>
 <body>
 
-<h1>아침 산책 기록</h1>
+<h1>🌅 아침 산책 기록</h1>
+<p style="opacity:0.8; font-size:14px; margin-top:-10px;">아침 산책처럼 가볍게 남기는 나의 기록</p>
 
-<input type="file" id="photoInput" accept="image/*">
+<input type="file" id="photoInput" accept="image/*" multiple>
 
 <div id="gallery"></div>
 
@@ -90,7 +91,8 @@ fileInput.addEventListener("change", function () {
     const record = {
       src: e.target.result,
       likes: 0,
-      comments: []
+      comments: [],
+      date: new Date().toISOString().slice(0,10)
     };
 
     records.unshift(record);
@@ -118,14 +120,18 @@ function addPhoto(rec, index) {
   const card = document.createElement("div");
   card.className = "card";
 
+  const dateLabel = document.createElement("div");
+  dateLabel.style.fontSize = "12px";
+  dateLabel.style.opacity = "0.7";
+  dateLabel.style.marginBottom = "4px";
+  dateLabel.textContent = rec.date || "";
+
   const img = document.createElement("img");
   img.src = rec.src;
   img.className = "photo";
 
-  // 사진 클릭 시 배경 적용
   img.onclick = () => setBackground(rec.src);
 
-  /* ===== 좋아요 ===== */
   const likeBtn = document.createElement("button");
   likeBtn.textContent = `👍 좋아요 ${rec.likes}`;
   likeBtn.onclick = () => {
@@ -134,7 +140,6 @@ function addPhoto(rec, index) {
     renderAll();
   };
 
-  /* ===== 삭제 ===== */
   const delBtn = document.createElement("button");
   delBtn.textContent = "🗑 삭제";
   delBtn.onclick = () => {
@@ -148,7 +153,6 @@ function addPhoto(rec, index) {
   actions.className = "actions";
   actions.append(likeBtn, delBtn);
 
-  /* ===== 댓글 ===== */
   const commentInput = document.createElement("input");
   commentInput.placeholder = "짧은 댓글 남기기";
   commentInput.className = "comment-input";
@@ -172,7 +176,7 @@ function addPhoto(rec, index) {
     commentList.append(div);
   });
 
-  card.append(img, actions, commentInput, commentList);
+  card.append(dateLabel, img, actions, commentInput, commentList);
   gallery.append(card);
 }
 
