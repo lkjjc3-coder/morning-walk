@@ -66,7 +66,7 @@ nav button.active { background: #4caf50; }
   border-radius: 14px; padding: 10px;
 }
 .card img { width: 100%; border-radius: 10px; }
-.card .text { font-size: 14px; margin: 8px 0; opacity: .9; }
+.card .text { font-size: 14px; margin: 8px 0; opacity: .9; white-space: pre-wrap; }
 .actions { display: flex; justify-content: space-between; }
 .actions button {
   background: #333; border: none; color: #fff;
@@ -80,9 +80,9 @@ nav button.active { background: #4caf50; }
 <div class="subtitle">아침 산책처럼 가볍게 남기는 나의 기록</div>
 
 <nav>
-  <button class="active" onclick="switchTab('walk', this)">산책하기</button>
-  <button onclick="switchTab('meditation', this)">묵상하기</button>
-  <button onclick="switchTab('record', this)">기록하기</button>
+  <button class="active" data-tab="walk">산책하기</button>
+  <button data-tab="meditation">묵상하기</button>
+  <button data-tab="record">기록하기</button>
 </nav>
 
 <div id="walk" class="section active"></div>
@@ -90,14 +90,17 @@ nav button.active { background: #4caf50; }
 <div id="record" class="section"></div>
 
 <script>
-const sections = ['walk','meditation','record'];
+const tabs = document.querySelectorAll('nav button');
+const sections = document.querySelectorAll('.section');
 
-function switchTab(tab, btn) {
-  sections.forEach(s => document.getElementById(s).classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
+tabs.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabs.forEach(b => b.classList.remove('active'));
+    sections.forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
 
 function initSection(key, title) {
   const container = document.getElementById(key);
@@ -134,17 +137,21 @@ function initSection(key, title) {
     reader.readAsDataURL(file);
   });
 
-  // 저장 버튼 (중복 안전 처리)
-saveBtn.onclick = () => {
-    console.log('save clicked');
-    if (!tempImage) {
-      alert('사진을 먼저 선택하세요');
+  saveBtn.addEventListener('click', () => {
+    if (!tempImage && !textarea.value.trim()) {
+      alert('사진이나 글 중 하나는 입력해주세요');
       return;
     }
-    data.unshift({ img: tempImage, text: textarea.value, likes: 0, date: new Date().toISOString() });
+
+    data.unshift({
+      img: tempImage,
+      text: textarea.value.trim(),
+      likes: 0,
+      date: new Date().toISOString()
+    });
+
     localStorage.setItem(key, JSON.stringify(data));
 
-    // reset
     tempImage = null;
     preview.src = '';
     preview.style.display = 'none';
@@ -152,51 +159,61 @@ saveBtn.onclick = () => {
     input.value = '';
 
     render();
-  };
+  });
 
   function render() {
     viewer.innerHTML = '';
 
-    // 날짜순(최신 → 과거) 정렬
     const sorted = [...data].sort((a,b)=> new Date(b.date) - new Date(a.date));
 
     let currentDate = '';
-    sorted.forEach((item, i) => {
+    sorted.forEach(item => {
       const dateStr = new Date(item.date).toLocaleDateString('ko-KR');
       if (dateStr !== currentDate) {
         currentDate = dateStr;
-        const dateHeader = document.createElement('h3');
-        dateHeader.style.gridColumn = '1 / -1';
-        dateHeader.style.opacity = '.7';
-        dateHeader.textContent = dateStr;
-        viewer.appendChild(dateHeader);
+        const h = document.createElement('h3');
+        h.style.gridColumn = '1 / -1';
+        h.style.opacity = '.7';
+        h.textContent = dateStr;
+        viewer.appendChild(h);
       }
 
       const card = document.createElement('div');
       card.className = 'card';
-      card.innerHTML = `
-        <img src="${item.img}" />
-        <div class="text">${item.text || ''}</div>
-        <div class="actions">
-          <button data-like>👍 ${item.likes}</button>
-          <button data-del>🗑</button>
-        </div>
-      `;
 
-      card.querySelector('[data-like]').onclick = () => {
-        item.likes++;
-        save();
-      };
-      card.querySelector('[data-del]').onclick = () => {
-        if(confirm('삭제할까요?')){
-          const idx = data.indexOf(item);
-          if(idx>-1) data.splice(idx,1);
+      if (item.img) {
+        const img = document.createElement('img');
+        img.src = item.img;
+        card.appendChild(img);
+      }
+
+      if (item.text) {
+        const t = document.createElement('div');
+        t.className = 'text';
+        t.textContent = item.text;
+        card.appendChild(t);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+
+      const like = document.createElement('button');
+      like.textContent = `👍 ${item.likes}`;
+      like.onclick = () => { item.likes++; save(); };
+
+      const del = document.createElement('button');
+      del.textContent = '🗑';
+      del.onclick = () => {
+        if (confirm('삭제할까요?')) {
+          data = data.filter(d => d !== item);
           save();
         }
       };
+
+      actions.append(like, del);
+      card.appendChild(actions);
       viewer.appendChild(card);
     });
-  });
   }
 
   function save() {
